@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Classpath de secours, utilise si le projet est ouvert comme simple projet
+	Java. Le mieux reste de faire dans Eclipse :
+	   File > Import > Existing Maven Projects
+	m2e lit alors le pom.xml et gere les dependances tout seul.
+	Le dossier legacy/ (ancien code BadBlock) n'est volontairement PAS compile.
+-->
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="lib" path="C:/Users/Laugh/.m2/repository/org/spigotmc/spigot-api/1.8.8-R0.1-SNAPSHOT/spigot-api-1.8.8-R0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Laugh/.m2/repository/com/github/cryptomorin/XSeries/9.10.0/XSeries-9.10.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Laugh/.m2/repository/org/mariadb/jdbc/mariadb-java-client/2.7.12/mariadb-java-client-2.7.12.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Laugh/.m2/repository/me/clip/placeholderapi/2.11.6/placeholderapi-2.11.6.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

@@ -1,0 +1,119 @@
+# ==========================================================
+#  TheTower - kits
+# ==========================================================
+# Chaque joueur choisit son kit dans le lobby d'attente (item "Kits", l'epee)
+# ou avec /tt kit. Le kit choisi est donne au lancement et a chaque
+# reapparition, en plus de l'armure en cuir de l'equipe (config.yml,
+# kit.team-armor). Le choix est retenu d'une partie a l'autre.
+#
+# Au depart, un joueur n'a QUE le kit par defaut. Les autres se debloquent en
+# jouant, d'apres ses statistiques (celles de /tt stats). Le menu affiche ce
+# qu'il reste a faire, avec la progression ("Victoires : 2/3").
+#
+# Les kits d'origine de BadBlock ne sont pas recuperables (ils etaient stockes
+# sur leurs serveurs, jamais publies) : ceux-ci sont une proposition, a modifier
+# librement. Recharger avec /tt reload.
+#
+# default-kit : le kit que tout le monde possede d'office.
+#
+# Pour chaque kit :
+#   name        : nom affiche (couleurs avec &)
+#   icon        : item du menu (nom moderne ou d'avant la 1.13)
+#   description : lignes affichees sous le nom
+#   requires    : conditions de deblocage, TOUTES a remplir. Statistiques
+#                 possibles : games (parties), wins (victoires), losses,
+#                 kills, deaths, points (points marques), rating (ELO).
+#                 Absent = kit debloque d'office.
+#   permission  : (facultatif) permission requise, pour un kit reserve a un
+#                 grade (comme le kit VIP de BadBlock).
+#   items       : contenu { material: NOM, amount: quantite,
+#                 enchantments: { NOM: niveau } }. Noms d'enchantement modernes
+#                 ou anciens acceptes (EFFICIENCY / DIG_SPEED, SHARPNESS /
+#                 DAMAGE_ALL...). Une piece d'armure est portee directement, a
+#                 la place de la piece en cuir de l'equipe.
+#
+# Permission thetower.kits.all (op par defaut) : debloque tous les kits.
+
+default-kit: defaut
+
+kits:
+  defaut:
+    name: "&fDéfaut"
+    icon: LEATHER_CHESTPLATE
+    description:
+      - "&7Le kit de départ de tout le monde."
+    items:
+      - { material: BAKED_POTATO, amount: 16 }
+
+  archer:
+    name: "&aArcher"
+    icon: BOW
+    description:
+      - "&7Harcèle les défenseurs de loin."
+    requires: { games: 3 }
+    items:
+      - { material: BOW, amount: 1 }
+      - { material: ARROW, amount: 16 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  batisseur:
+    name: "&eBâtisseur"
+    icon: SANDSTONE
+    description:
+      - "&7De quoi jeter un pont vers la tour adverse."
+    requires: { games: 5 }
+    items:
+      - { material: SANDSTONE, amount: 32 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  mineur:
+    name: "&6Mineur"
+    icon: IRON_PICKAXE
+    description:
+      - "&7Creuse ton propre chemin à travers la map."
+    requires: { games: 10 }
+    items:
+      - { material: STONE_PICKAXE, amount: 1, enchantments: { EFFICIENCY: 2 } }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  guerrier:
+    name: "&cGuerrier"
+    icon: STONE_SWORD
+    description:
+      - "&7Une épée dès la première seconde."
+    requires: { wins: 3 }
+    items:
+      - { material: STONE_SWORD, amount: 1 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  enchanteur:
+    name: "&dEnchanteur"
+    icon: EXPERIENCE_BOTTLE
+    description:
+      - "&7De l'XP et du lapis pour enchanter plus tôt."
+    requires: { points: 10 }
+    items:
+      - { material: EXPERIENCE_BOTTLE, amount: 8 }
+      - { material: LAPIS_LAZULI, amount: 8 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  tank:
+    name: "&7Tank"
+    icon: CHAINMAIL_CHESTPLATE
+    description:
+      - "&7Un plastron en mailles pour encaisser."
+    requires: { wins: 10, kills: 50 }
+    items:
+      - { material: CHAINMAIL_CHESTPLATE, amount: 1 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  vip:
+    name: "&6&lVIP"
+    icon: GOLDEN_APPLE
+    description:
+      - "&7Réservé aux grades."
+    permission: thetower.kit.vip
+    items:
+      - { material: STONE_SWORD, amount: 1, enchantments: { SHARPNESS: 1 } }
+      - { material: GOLDEN_APPLE, amount: 2 }
+      - { material: BAKED_POTATO, amount: 16 }

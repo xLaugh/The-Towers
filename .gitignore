@@ -1,0 +1,15 @@
+# Build Maven
+/target/
+
+# Preferences Eclipse propres a chaque poste (.classpath/.project restent
+# suivis : filet de secours volontaire).
+/.settings/
+
+# Divers OS / IDE
+Thumbs.db
+.DS_Store
+*.log
+
+# Ancien code BadBlock, reference locale uniquement (jamais compile). Contient
+# notamment spigot.jar, un jar serveur qu'on ne peut pas redistribuer.
+/legacy/

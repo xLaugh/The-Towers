@@ -1,0 +1,40 @@
+name: TheTower
+version: ${project.version}
+main: fr.laugh.thetower.Main
+author: xLaugh
+description: Mini-jeu The Tower - marque dans la piscine adverse. Multi-arenes, 1.8 a 1.21.
+
+# Optionnel, jamais obligatoire : TheTower fonctionne sans.
+#   PlaceholderAPI -> enregistre les placeholders %thetower_...%
+softdepend: [PlaceholderAPI]
+
+# api-version : les serveurs 1.8 a 1.12 ignorent purement et simplement cette
+# cle ; les serveurs 1.13+ l'exigent pour sortir du "legacy mode".
+# La valeur 1.13 est donc la seule qui soit sure de 1.8 jusqu'a 1.21.
+api-version: 1.13
+
+commands:
+  tt:
+    description: Commande principale du plugin TheTower.
+    usage: /<command> <sous-commande> [arguments]
+    aliases: [thetower]
+    # Volontairement AUCUNE permission ici : la commande doit rester
+    # accessible aux joueurs pour /tt join et /tt leave. Les sous-commandes
+    # d'administration verifient thetower.admin une par une.
+
+permissions:
+  thetower.admin:
+    description: Acces aux commandes d'administration des arenes.
+    default: op
+  thetower.join:
+    description: Permet de rejoindre une arene.
+    default: true
+  thetower.arenamode.bypass:
+    description: N'est pas auto-rejoint quand le serveur est en mode arene.
+    default: op
+  thetower.kits.all:
+    description: Debloque tous les kits, sans condition (tests, administrateurs).
+    default: op
+  thetower.kit.vip:
+    description: Acces au kit VIP de kits.yml (a donner aux grades).
+    default: false

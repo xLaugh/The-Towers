@@ -1,0 +1,157 @@
+# ==========================================================
+#  TheTower - configuration generale
+# ==========================================================
+
+# Langue des messages joueur, pour tout le serveur :
+#   fr (francais), en (anglais).
+# Les textes sont editables dans le dossier lang/ (un fichier par langue).
+# Pour une autre langue : copie lang/en.yml en lang/<code>.yml, traduis-le et
+# mets son code ici. Toute cle manquante retombe sur le francais.
+language: fr
+
+# Lobby principal du serveur, ou les joueurs sont renvoyes en fin de partie.
+# Se definit en jeu avec /tt setlobby (ne pas editer a la main).
+server-lobby:
+  world: ''
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  yaw: 0.0
+  pitch: 0.0
+
+# Teleporter les joueurs au lobby principal a leur connexion.
+# A mettre sur false si le serveur ne fait pas QUE du TheTower.
+lobby-on-join: true
+
+# Compatibilite proxy (BungeeCord / Waterfall / Velocity). Prise en compte au
+# demarrage (redemarre apres avoir change ces valeurs).
+#   enabled: true    -> en fin de partie et sur /tt leave, le joueur est renvoye
+#                       vers le serveur hub ci-dessous, au lieu du lobby local.
+#   fallback-server  -> nom du serveur tel qu'il est declare dans la config du
+#                       proxy (bungeecord config.yml / velocity.toml).
+#
+# A faire cote serveur (pas ici), sinon les stats seront fausses :
+#   - active le forwarding : spigot.yml "bungeecord: true", ou le modern
+#     forwarding de Velocity -> les UUID des joueurs arrivent corrects.
+#   - pour des stats communes a tout le reseau, mets storage.type: mysql.
+bungeecord:
+  enabled: false
+  fallback-server: lobby
+
+# Mode arene (reseau facon "1 serveur = 1 partie", comme BadBlock). Quand
+# enabled: true, tout joueur qui se connecte est mis directement dans l'arene
+# ci-dessous, sans passer par /tt join. Si une partie y est deja en cours (ou
+# l'arene pleine), le joueur est renvoye vers le hub (necessite
+# bungeecord.enabled). Les joueurs avec la permission thetower.arenamode.bypass
+# (op par defaut) ne sont PAS auto-rejoints, pour pouvoir configurer/observer.
+arena-mode:
+  enabled: false
+  arena: ''
+
+# Stockage des statistiques (parties, victoires, defaites, kills, morts, points).
+#   type: local  -> fichier stats.yml, aucune dependance (recommande pour un serveur seul)
+#   type: mysql  -> base MySQL/MariaDB (pilote embarque dans le jar), pour partager
+#                   les stats entre plusieurs serveurs ou avec un site web
+# Le changement de type prend effet au redemarrage.
+storage:
+  type: local
+  mysql:
+    host: localhost
+    port: 3306
+    database: thetower
+    user: root
+    password: ''
+    table: thetower_stats
+
+# Duree du compte a rebours avant le lancement d'une partie (secondes).
+countdown: 30
+
+# Points a marquer pour gagner : valeur PAR DEFAUT des nouvelles arenes (chacune
+# peut la changer dans le menu ou avec /tt setpoints). 10 sur BadBlock.
+points-to-win: 10
+
+# Duree maximale d'une partie, en secondes : valeur PAR DEFAUT des nouvelles
+# arenes (menu ou /tt setduration, en minutes). A la fin du temps, l'equipe qui
+# mene gagne ; en cas d'egalite, mort subite (le prochain point l'emporte).
+# 2400 = 40 minutes.
+game-duration: 2400
+
+# Delai minimal (secondes) entre deux points d'un meme joueur. Simple securite
+# contre un double declenchement : apres un point, le joueur est de toute facon
+# renvoye a sa base.
+mark-cooldown: 3
+
+# Secondes entre la fin de la partie (resume, feux d'artifice) et le renvoi
+# des joueurs au lobby.
+end-delay: 10
+
+# Reconnexion en cours de partie. Un joueur qui se deconnecte (crash, coupure)
+# garde sa place dans son equipe et la retrouve automatiquement en se
+# reconnectant, avec son inventaire et son XP.
+#   enabled : false = toute deconnexion fait quitter la partie definitivement
+#   timeout : secondes pour revenir ; 0 = jusqu'a la fin de la partie
+# Une equipe dont tous les joueurs sont deconnectes n'abandonne qu'a la fin de
+# ce delai. Anti-abus : se deconnecter moins de 10 secondes apres avoir ete
+# frappe par un adversaire compte comme une mort (objets au sol, kill pour
+# l'adversaire), et l'on revient avec le kit de depart.
+reconnection:
+  enabled: true
+  timeout: 180
+
+# Regeneration de la map : a la fin de chaque partie, le terrain modifie pendant
+# la manche (blocs casses, poses, explosions, feu, liquides) ET le contenu des
+# coffres ouverts sont remis a leur etat d'origine. Mettre a false pour laisser
+# la map en l'etat entre deux parties.
+map-regeneration: true
+
+# Equipement donne au lancement et a chaque reapparition.
+#   team-armor : armure en cuir complete a la couleur de l'equipe, donnee en
+#                plus du kit choisi par le joueur.
+# Les kits eux-memes (contenu, deblocage, kit par defaut) se reglent dans
+# kits.yml. Si une arene interdit les arcs, arcs et fleches sont retires.
+kit:
+  team-armor: true
+
+# Generateurs de ressources : chaque type se pose ensuite dans les arenes (menu
+# > Generateurs, ou /tt addgenerator <arene> <type>).
+#   material      : item produit (nom moderne ou d'avant la 1.13)
+#   amount        : quantite par apparition (defaut 1)
+#   interval      : intervalle entre deux apparitions, en TICKS (20 = 1 seconde)
+#   max-on-ground : items au sol au maximum pour ce generateur ; au-dela, les
+#                   plus anciens disparaissent (evite les tas enormes)
+# Valeurs par defaut = celles de BadBlock : fer toutes les 3 s, bouteille d'XP
+# toutes les 1,5 s, diamant toutes les 40 s.
+generators:
+  iron:
+    material: IRON_INGOT
+    interval: 60
+    max-on-ground: 1
+  xp:
+    material: EXPERIENCE_BOTTLE
+    interval: 30
+    max-on-ground: 1
+  diamond:
+    material: DIAMOND
+    interval: 800
+    max-on-ground: 1
+
+# Annonce de fin de partie sur un webhook Discord : qui a gagne, sur quelle
+# arene, combien de joueurs. Requete HTTP toute simple, sans dependance ajoutee.
+#   enabled     -> true pour activer
+#   webhook-url -> URL du webhook (salon Discord > Parametres > Integrations >
+#                  Webhooks > Nouveau webhook > Copier l'URL)
+discord:
+  enabled: false
+  webhook-url: ''
+
+# Scoreboard lateral affiche pendant la partie (scores, temps restant...).
+# footer : ligne du bas (ex. l'IP du serveur). Vide = ligne masquee.
+# Note : sans NMS, les petits numeros rouges a droite restent visibles.
+scoreboard:
+  enabled: true
+  footer: "laugh.yt"
+
+# Quetes du jour (/tt quests) : trois objectifs fixes qui se reinitialisent
+# chaque jour (gagner des parties, faire des kills, marquer des points).
+quests:
+  enabled: true
