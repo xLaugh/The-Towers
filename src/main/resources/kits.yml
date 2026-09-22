@@ -1,5 +1,5 @@
 # ==========================================================
-#  TheTower - kits
+#  TheTowers - kits
 # ==========================================================
 # Chaque joueur choisit son kit dans le lobby d'attente (item "Kits", l'epee)
 # ou avec /tt kit. Le kit choisi est donne au lancement et a chaque
@@ -32,7 +32,7 @@
 #                 DAMAGE_ALL...). Une piece d'armure est portee directement, a
 #                 la place de la piece en cuir de l'equipe.
 #
-# Permission thetower.kits.all (op par defaut) : debloque tous les kits.
+# Permission thetowers.kits.all (op par defaut) : debloque tous les kits.
 
 default-kit: defaut
 
@@ -112,7 +112,7 @@ kits:
     icon: GOLDEN_APPLE
     description:
       - "&7Réservé aux grades."
-    permission: thetower.kit.vip
+    permission: thetowers.kit.vip
     items:
       - { material: STONE_SWORD, amount: 1, enchantments: { SHARPNESS: 1 } }
       - { material: GOLDEN_APPLE, amount: 2 }

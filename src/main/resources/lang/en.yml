@@ -1,6 +1,6 @@
-# TheTower - player messages (English)
+# TheTowers - player messages (English)
 # Color codes with & ; %name% variables are replaced when displayed.
-# The [TheTower] prefix is added by the code, do not put it here.
+# The [TheTowers] prefix is added by the code, do not put it here.
 # Any key missing here falls back to the French file.
 
 # ================= Commands =================
@@ -78,7 +78,7 @@ command.no_stats: "&7No statistics recorded."
 command.top_header: "&6Top %stat%:"
 command.top_entry: "&7 %rank%. &f%name%&7 - &6%value%"
 command.not_integer: "&c\"%value%\" is not an integer."
-command.help_header: "&6TheTower commands"
+command.help_header: "&6TheTowers commands"
 command.help_join: "&7 /tt join <arena> &8join a game"
 command.help_leave: "&7 /tt leave &8leave the game"
 command.help_list: "&7 /tt list &8list arenas"
@@ -214,7 +214,7 @@ kits.unknown: "&cUnknown kit: %name%. Type /tt kit to see the list."
 kits.unlocked: "&6&lNew kit unlocked: %kit%&6! &7(/tt kit)"
 
 # ================= Rules book =================
-book.page: "&4&lTheTower\n\n&0Jump into the enemy team's &bpool&0 to score a point.\n\nThe first team to reach the goal wins.\n\nIron, XP and diamonds spawn on the map: gear up and enchant!\n\nWhen you die, you respawn at your base."
+book.page: "&4&lTheTowers\n\n&0Jump into the enemy team's &bpool&0 to score a point.\n\nThe first team to reach the goal wins.\n\nIron, XP and diamonds spawn on the map: gear up and enchant!\n\nWhen you die, you respawn at your base."
 
 # ================= Join signs =================
 sign.random: "Random"
@@ -229,7 +229,7 @@ sign.created_random: "&aRandom join sign created."
 sign.no_game: "&cNo game available right now."
 
 # ================= Setup menu =================
-config.title.list: "&8TheTower arenas"
+config.title.list: "&8TheTowers arenas"
 config.title.edit: "&8Setup"
 config.title.team: "&8Team settings"
 config.title.generators: "&8Generators"
@@ -317,15 +317,26 @@ config.place.arena_gone: "&cThis arena no longer exists."
 config.place.not_placing: "&cYou are not placing anything."
 
 # ================= Scoreboard =================
-scoreboard.title: "&e&lTHE TOWER"
-scoreboard.date: "&7%date% &8%arena%"
+# Default layout, used when scoreboard.lines is empty in config.yml
+# (see config.yml for the list of placeholders and special lines).
+scoreboard.title: "&e&lTHE TOWERS"
+scoreboard.lines:
+  - "&7%thetowers_date% &8%thetowers_arena%"
+  - ""
+  - "{timer}"
+  - "&fGoal: &e%thetowers_goal% pts"
+  - ""
+  - "{teams}"
+  - ""
+  - "&fKills: &a%thetowers_game_kills%"
+  - "&fPoints: &a%thetowers_game_points%"
+  - ""
+  - "{footer}"
+# Content of the special lines {timer}, {teams} and {footer}.
 scoreboard.time_left: "&fEnds in &a%time%"
 scoreboard.overtime: "&c&lSudden death!"
-scoreboard.goal: "&fGoal: &e%goal% pts"
 scoreboard.team_line: "%color%%letter% &f%team% &a%score%&7/%goal%%you%"
 scoreboard.you_suffix: " &eYOU"
-scoreboard.kills: "&fKills: &a%value%"
-scoreboard.points: "&fPoints: &a%value%"
 scoreboard.footer: "&e%footer%"
 
 # ================= Discord =================

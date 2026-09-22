@@ -1,6 +1,6 @@
-# TheTower - messages joueur (francais)
+# TheTowers - messages joueur (francais)
 # Codes couleur avec & ; variables %nom% remplacees a l'affichage.
-# Le prefixe [TheTower] est ajoute par le code, ne pas le mettre ici.
+# Le prefixe [TheTowers] est ajoute par le code, ne pas le mettre ici.
 # Ce fichier est la reference : toute cle absente d'une autre langue y est cherchee.
 
 # ================= Commandes =================
@@ -78,7 +78,7 @@ command.no_stats: "&7Aucune statistique enregistrée."
 command.top_header: "&6Top %stat% :"
 command.top_entry: "&7 %rank%. &f%name%&7 - &6%value%"
 command.not_integer: "&c\"%value%\" n'est pas un nombre entier."
-command.help_header: "&6Commandes TheTower"
+command.help_header: "&6Commandes TheTowers"
 command.help_join: "&7 /tt join <arène> &8rejoindre une partie"
 command.help_leave: "&7 /tt leave &8quitter la partie"
 command.help_list: "&7 /tt list &8lister les arènes"
@@ -214,7 +214,7 @@ kits.unknown: "&cKit inconnu : %name%. Tape /tt kit pour voir la liste."
 kits.unlocked: "&6&lNouveau kit débloqué : %kit%&6 ! &7(/tt kit)"
 
 # ================= Livre d'explication =================
-book.page: "&4&lTheTower\n\n&0Saute dans la &bpiscine&0 de l'équipe adverse pour marquer un point.\n\nLa première équipe à l'objectif gagne.\n\nFer, XP et diamants apparaissent sur la map : équipe-toi et enchante !\n\nÀ ta mort, tu réapparais à ta base."
+book.page: "&4&lTheTowers\n\n&0Saute dans la &bpiscine&0 de l'équipe adverse pour marquer un point.\n\nLa première équipe à l'objectif gagne.\n\nFer, XP et diamants apparaissent sur la map : équipe-toi et enchante !\n\nÀ ta mort, tu réapparais à ta base."
 
 # ================= Panneaux de connexion =================
 sign.random: "Aléatoire"
@@ -229,7 +229,7 @@ sign.created_random: "&aPanneau de connexion aléatoire créé."
 sign.no_game: "&cAucune partie disponible pour le moment."
 
 # ================= Menu de configuration =================
-config.title.list: "&8Arènes TheTower"
+config.title.list: "&8Arènes TheTowers"
 config.title.edit: "&8Configuration"
 config.title.team: "&8Réglages d'équipe"
 config.title.generators: "&8Générateurs"
@@ -317,15 +317,26 @@ config.place.arena_gone: "&cCette arène n'existe plus."
 config.place.not_placing: "&cTu n'es pas en train de placer quoi que ce soit."
 
 # ================= Scoreboard =================
-scoreboard.title: "&e&lTHE TOWER"
-scoreboard.date: "&7%date% &8%arena%"
+# Mise en page par defaut, utilisee si scoreboard.lines est vide dans config.yml
+# (voir config.yml pour la liste des placeholders et des lignes speciales).
+scoreboard.title: "&e&lTHE TOWERS"
+scoreboard.lines:
+  - "&7%thetowers_date% &8%thetowers_arena%"
+  - ""
+  - "{timer}"
+  - "&fObjectif : &e%thetowers_goal% pts"
+  - ""
+  - "{teams}"
+  - ""
+  - "&fKills : &a%thetowers_game_kills%"
+  - "&fPoints : &a%thetowers_game_points%"
+  - ""
+  - "{footer}"
+# Contenu des lignes speciales {timer}, {teams} et {footer}.
 scoreboard.time_left: "&fFin dans &a%time%"
 scoreboard.overtime: "&c&lMort subite !"
-scoreboard.goal: "&fObjectif : &e%goal% pts"
 scoreboard.team_line: "%color%%letter% &f%team% &a%score%&7/%goal%%you%"
 scoreboard.you_suffix: " &eVOUS"
-scoreboard.kills: "&fKills : &a%value%"
-scoreboard.points: "&fPoints : &a%value%"
 scoreboard.footer: "&e%footer%"
 
 # ================= Discord =================

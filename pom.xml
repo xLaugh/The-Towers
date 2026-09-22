@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>fr.laugh</groupId>
-    <artifactId>TheTower</artifactId>
-    <version>1.0.0</version>
+    <artifactId>TheTowers</artifactId>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
-    <name>TheTower</name>
-    <description>Mini-jeu The Tower (marquer dans la piscine adverse), compatible Minecraft 1.8 a 1.21</description>
+    <name>TheTowers</name>
+    <description>Mini-jeu The Towers (marquer dans la piscine adverse), compatible Minecraft 1.8 a 1.21</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -93,7 +93,7 @@
 
         <!--
             PlaceholderAPI : uniquement pour compiler l'expansion des
-            placeholders %thetower_...%. Jamais embarque ; l'expansion n'est
+            placeholders %thetowers_...%. Jamais embarque ; l'expansion n'est
             chargee que si le plugin PlaceholderAPI est present.
         -->
         <dependency>
@@ -151,11 +151,11 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.cryptomorin.xseries</pattern>
-                                    <shadedPattern>fr.laugh.thetower.libs.xseries</shadedPattern>
+                                    <shadedPattern>fr.laugh.thetowers.libs.xseries</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.mariadb.jdbc</pattern>
-                                    <shadedPattern>fr.laugh.thetower.libs.mariadb</shadedPattern>
+                                    <shadedPattern>fr.laugh.thetowers.libs.mariadb</shadedPattern>
                                 </relocation>
                             </relocations>
                             <!--

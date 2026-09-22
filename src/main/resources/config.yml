@@ -1,5 +1,5 @@
 # ==========================================================
-#  TheTower - configuration generale
+#  TheTowers - configuration generale
 # ==========================================================
 
 # Langue des messages joueur, pour tout le serveur :
@@ -20,7 +20,7 @@ server-lobby:
   pitch: 0.0
 
 # Teleporter les joueurs au lobby principal a leur connexion.
-# A mettre sur false si le serveur ne fait pas QUE du TheTower.
+# A mettre sur false si le serveur ne fait pas QUE du TheTowers.
 lobby-on-join: true
 
 # Compatibilite proxy (BungeeCord / Waterfall / Velocity). Prise en compte au
@@ -42,7 +42,7 @@ bungeecord:
 # enabled: true, tout joueur qui se connecte est mis directement dans l'arene
 # ci-dessous, sans passer par /tt join. Si une partie y est deja en cours (ou
 # l'arene pleine), le joueur est renvoye vers le hub (necessite
-# bungeecord.enabled). Les joueurs avec la permission thetower.arenamode.bypass
+# bungeecord.enabled). Les joueurs avec la permission thetowers.arenamode.bypass
 # (op par defaut) ne sont PAS auto-rejoints, pour pouvoir configurer/observer.
 arena-mode:
   enabled: false
@@ -58,10 +58,10 @@ storage:
   mysql:
     host: localhost
     port: 3306
-    database: thetower
+    database: thetowers
     user: root
     password: ''
-    table: thetower_stats
+    table: thetowers_stats
 
 # Duree du compte a rebours avant le lancement d'une partie (secondes).
 countdown: 30
@@ -144,12 +144,62 @@ discord:
   enabled: false
   webhook-url: ''
 
-# Scoreboard lateral affiche pendant la partie (scores, temps restant...).
-# footer : ligne du bas (ex. l'IP du serveur). Vide = ligne masquee.
-# Note : sans NMS, les petits numeros rouges a droite restent visibles.
+# Scoreboard lateral affiche pendant la partie, entierement personnalisable.
+#   footer : texte de la ligne speciale {footer} (ex. l'IP du serveur).
+#            Vide = ligne masquee.
+#   title  : titre. Vide = celui du fichier de langue.
+#   lines  : les lignes, de haut en bas (15 au maximum). Vide = mise en page
+#            par defaut du fichier de langue (lang/<code>.yml, scoreboard.lines).
+#            Ajoute, retire ou deplace les lignes comme tu veux ; couleurs avec &.
+#
+# Dans une ligne (et dans le titre) :
+#   - Placeholders de TheTowers, qui marchent MEME SANS PlaceholderAPI :
+#       %thetowers_arena%        nom de l'arene
+#       %thetowers_date%         date du jour (jj/mm/aa)
+#       %thetowers_time%         temps restant (M:SS)
+#       %thetowers_goal%         points a marquer pour gagner
+#       %thetowers_team%         equipe du joueur ; %thetowers_team_color% en couleur
+#       %thetowers_score%        score de l'equipe du joueur
+#       %thetowers_score_rouge%  score d'une equipe precise (rouge, bleu, jaune, vert)
+#       %thetowers_players%      joueurs dans l'arene ; %thetowers_maxplayers% le maximum
+#       %thetowers_game_kills%   kills du joueur dans cette partie
+#       %thetowers_game_deaths%  morts du joueur dans cette partie
+#       %thetowers_game_points%  points marques par le joueur dans cette partie
+#       %thetowers_kit%          kit choisi
+#       %thetowers_kills% %thetowers_deaths% %thetowers_wins% %thetowers_losses%
+#       %thetowers_games% %thetowers_points% %thetowers_rating% %thetowers_kd%
+#                               statistiques de carriere
+#   - Placeholders de N'IMPORTE QUEL autre plugin, si PlaceholderAPI est installe :
+#       %player_name%, %luckperms_prefix%, %vault_eco_balance%...
+#   - Lignes speciales, seules sur leur ligne :
+#       {teams}   une ligne par equipe avec son score (format : lang, scoreboard.team_line)
+#       {timer}   temps restant, ou "Mort subite" en cas d'egalite a la fin du temps
+#       {footer}  le texte "footer" ci-dessus (ligne masquee s'il est vide)
+#
+# Longueur d'une ligne : 32 caracteres (codes couleur compris) en 1.8-1.12,
+# 128 a partir de la 1.13 ; au-dela, le texte est coupe.
+# Note : sans NMS, les petits numeros rouges a droite restent visibles avant la 1.20.5.
+#
+# Exemple (a mettre a la place de "lines: []") :
+#   title: "&6&lTHE TOWERS"
+#   lines:
+#     - "&7%thetowers_date% &8%thetowers_arena%"
+#     - ""
+#     - "{timer}"
+#     - "&fObjectif : &e%thetowers_goal% pts"
+#     - ""
+#     - "{teams}"
+#     - ""
+#     - "&fEquipe : %thetowers_team_color%"
+#     - "&fKills : &a%thetowers_game_kills%"
+#     - "&fGrade : %luckperms_prefix%"
+#     - ""
+#     - "{footer}"
 scoreboard:
   enabled: true
   footer: "laugh.yt"
+  title: ""
+  lines: []
 
 # Quetes du jour (/tt quests) : trois objectifs fixes qui se reinitialisent
 # chaque jour (gagner des parties, faire des kills, marquer des points).

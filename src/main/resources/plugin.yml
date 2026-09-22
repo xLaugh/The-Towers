@@ -1,11 +1,11 @@
-name: TheTower
+name: TheTowers
 version: ${project.version}
-main: fr.laugh.thetower.Main
+main: fr.laugh.thetowers.Main
 author: xLaugh
-description: Mini-jeu The Tower - marque dans la piscine adverse. Multi-arenes, 1.8 a 1.21.
+description: Mini-jeu The Towers - marque dans la piscine adverse. Multi-arenes, 1.8 a 1.21.
 
-# Optionnel, jamais obligatoire : TheTower fonctionne sans.
-#   PlaceholderAPI -> enregistre les placeholders %thetower_...%
+# Optionnel, jamais obligatoire : TheTowers fonctionne sans.
+#   PlaceholderAPI -> enregistre les placeholders %thetowers_...%
 softdepend: [PlaceholderAPI]
 
 # api-version : les serveurs 1.8 a 1.12 ignorent purement et simplement cette
@@ -15,26 +15,57 @@ api-version: 1.13
 
 commands:
   tt:
-    description: Commande principale du plugin TheTower.
+    description: Commande principale du plugin TheTowers.
     usage: /<command> <sous-commande> [arguments]
-    aliases: [thetower]
+    # thetower : ancien nom du plugin, garde pour les habitudes des joueurs.
+    aliases: [thetowers, thetower]
     # Volontairement AUCUNE permission ici : la commande doit rester
     # accessible aux joueurs pour /tt join et /tt leave. Les sous-commandes
-    # d'administration verifient thetower.admin une par une.
+    # d'administration verifient thetowers.admin une par une.
 
 permissions:
-  thetower.admin:
+  thetowers.admin:
     description: Acces aux commandes d'administration des arenes.
     default: op
-  thetower.join:
+  thetowers.join:
     description: Permet de rejoindre une arene.
     default: true
-  thetower.arenamode.bypass:
+  thetowers.arenamode.bypass:
     description: N'est pas auto-rejoint quand le serveur est en mode arene.
     default: op
-  thetower.kits.all:
+  thetowers.kits.all:
     description: Debloque tous les kits, sans condition (tests, administrateurs).
     default: op
-  thetower.kit.vip:
+  thetowers.kit.vip:
     description: Acces au kit VIP de kits.yml (a donner aux grades).
     default: false
+
+  # Anciennes permissions, d'avant le renommage TheTower -> TheTowers. Un serveur
+  # qui les a deja donnees a ses groupes n'a rien a changer : chacune donne la
+  # nouvelle (mecanisme "children" de Bukkit). Elles ne sont accordees a
+  # personne par defaut.
+  thetower.admin:
+    description: Ancien nom de thetowers.admin.
+    default: false
+    children:
+      thetowers.admin: true
+  thetower.join:
+    description: Ancien nom de thetowers.join.
+    default: false
+    children:
+      thetowers.join: true
+  thetower.arenamode.bypass:
+    description: Ancien nom de thetowers.arenamode.bypass.
+    default: false
+    children:
+      thetowers.arenamode.bypass: true
+  thetower.kits.all:
+    description: Ancien nom de thetowers.kits.all.
+    default: false
+    children:
+      thetowers.kits.all: true
+  thetower.kit.vip:
+    description: Ancien nom de thetowers.kit.vip.
+    default: false
+    children:
+      thetowers.kit.vip: true
