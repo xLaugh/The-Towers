@@ -1,0 +1,17 @@
+# Build Maven
+/target/
+
+# Preferences Eclipse propres a chaque poste (.classpath/.project restent
+# suivis : filet de secours volontaire).
+/.settings/
+
+# Divers OS / IDE
+Thumbs.db
+.DS_Store
+*.log
+
+# Dossier de reference local, jamais compile ni publie.
+/legacy/
+
+# Texte de la description SpigotMC, garde en local uniquement.
+/SPIGOTMC.md
