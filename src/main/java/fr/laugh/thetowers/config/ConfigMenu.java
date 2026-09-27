@@ -35,6 +35,9 @@ public class ConfigMenu {
     private static final int GEN_SIZE = 54;
     private static final int DELETE_SIZE = 27;
 
+    // ---- Slots de la liste ----
+    private static final int L_CREATE = 53;
+
     // ---- Slots du menu d'edition ----
     private static final int E_BACK = 0;
     private static final int E_INFO = 4;
@@ -101,7 +104,7 @@ public class ConfigMenu {
             inv.setItem(i, icon(TTMaterial.BEACON, name, lore));
         }
 
-        inv.setItem(53, icon(TTMaterial.PAPER, Messages.tr("config.list.create_name"),
+        inv.setItem(L_CREATE, icon(TTMaterial.PAPER, Messages.tr("config.list.create_name"),
                 one(Messages.tr("config.list.create_lore"))));
 
         player.openInventory(inv);
@@ -305,6 +308,10 @@ public class ConfigMenu {
     }
 
     private void clickList(Player player, int slot) {
+        if (slot == L_CREATE) {
+            main.getArenaNaming().start(player);
+            return;
+        }
         List<Arena> arenas = arenas();
         if (slot >= 0 && slot < arenas.size() && slot < 45) {
             openEdit(player, arenas.get(slot).getName());

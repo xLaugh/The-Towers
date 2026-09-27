@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,14 @@ public class ArenaManager {
     private final Main main;
     private final Map<String, Arena> arenas = new LinkedHashMap<String, Arena>();
     private final Set<UUID> stranded = new HashSet<UUID>();
+    /**
+     * Positions lues dans arenes.yml dont le monde n'etait pas encore charge
+     * (monde gere par Multiverse ou autre, charge apres TheTowers). Elles sont
+     * gardees telles quelles : reecrites a chaque sauvegarde, et appliquees a
+     * l'arene des que leur monde se charge. Sans cela, la premiere sauvegarde
+     * (au plus tard l'arret du serveur) les effacait du fichier.
+     */
+    private final List<PendingLocation> pending = new ArrayList<PendingLocation>();
 
     private File arenasFile;
     private FileConfiguration arenasConfig;
@@ -49,6 +58,7 @@ public class ArenaManager {
 
     public void load() {
         arenas.clear();
+        pending.clear();
 
         arenasFile = new File(main.getDataFolder(), "arenes.yml");
         if (!arenasFile.exists()) {
@@ -80,7 +90,8 @@ public class ArenaManager {
             arena.setPointsToWin(section.getInt("points", main.getDefaultPointsToWin()));
             arena.setDuration(section.getInt("duration", main.getGameDuration()));
             arena.setAllowBows(section.getBoolean("allowBows", true));
-            arena.setLobby(readLocation(section.getConfigurationSection("lobby")));
+            arena.setLobby(readLocation(section.getConfigurationSection("lobby"),
+                    name, PendingLocation.LOBBY, null, null));
 
             ConfigurationSection teams = section.getConfigurationSection("teams");
             if (teams != null) {
@@ -89,7 +100,8 @@ public class ArenaManager {
                     if (t == null) {
                         continue;
                     }
-                    Location spawn = readLocation(t.getConfigurationSection("spawn"));
+                    Location spawn = readLocation(t.getConfigurationSection("spawn"),
+                            name, PendingLocation.SPAWN, team, null);
                     if (spawn != null) {
                         arena.setSpawn(team, spawn);
                     }
@@ -106,9 +118,12 @@ public class ArenaManager {
                     if (g == null) {
                         continue;
                     }
-                    Location location = readLocation(g);
                     String type = g.getString("type", "");
-                    if (location != null && !type.isEmpty()) {
+                    if (type.isEmpty()) {
+                        continue;
+                    }
+                    Location location = readLocation(g, name, PendingLocation.GENERATOR, null, type);
+                    if (location != null) {
                         arena.addGenerator(type, location);
                     }
                 }
@@ -118,6 +133,49 @@ public class ArenaManager {
         }
 
         main.getLogger().info(arenas.size() + " arene(s) chargee(s).");
+        if (!pending.isEmpty()) {
+            Set<String> worlds = new HashSet<String>();
+            for (PendingLocation p : pending) {
+                worlds.add(p.world);
+            }
+            main.getLogger().warning("Monde(s) pas encore charge(s) : " + worlds + ". " + pending.size()
+                    + " position(s) conservee(s), reprises des que le monde sera charge.");
+        }
+    }
+
+    /**
+     * Applique les positions en attente d'un monde qui vient de se charger.
+     * Une position redefinie entre-temps par l'admin reste prioritaire.
+     */
+    public void resolvePending(World world) {
+        int resolved = 0;
+        for (Iterator<PendingLocation> it = pending.iterator(); it.hasNext();) {
+            PendingLocation p = it.next();
+            if (!p.world.equals(world.getName())) {
+                continue;
+            }
+            it.remove();
+            Arena arena = getArena(p.arena);
+            if (arena == null) {
+                continue;
+            }
+            Location location = p.toLocation(world);
+            if (PendingLocation.LOBBY.equals(p.kind)) {
+                if (arena.getLobby() == null) {
+                    arena.setLobby(location);
+                }
+            } else if (PendingLocation.SPAWN.equals(p.kind)) {
+                if (!arena.getSpawns().containsKey(p.team)) {
+                    arena.setSpawn(p.team, location);
+                }
+            } else {
+                arena.addGenerator(p.type, location);
+            }
+            resolved++;
+        }
+        if (resolved > 0) {
+            main.getLogger().info(resolved + " position(s) reprise(s) dans le monde " + world.getName() + ".");
+        }
     }
 
     public void save() {
@@ -154,6 +212,27 @@ public class ArenaManager {
                 arenasConfig.set(genPath + ".type", spot.getType());
                 writeLocation(genPath, spot.getLocation());
                 index++;
+            }
+
+            // Positions dont le monde n'est pas charge : recopiees telles quelles.
+            for (PendingLocation p : pending) {
+                if (!p.arena.equalsIgnoreCase(arena.getName())) {
+                    continue;
+                }
+                if (PendingLocation.LOBBY.equals(p.kind)) {
+                    if (arena.getLobby() == null) {
+                        p.write(arenasConfig, path + ".lobby");
+                    }
+                } else if (PendingLocation.SPAWN.equals(p.kind)) {
+                    if (!arena.getSpawns().containsKey(p.team)) {
+                        p.write(arenasConfig, path + ".teams." + p.team + ".spawn");
+                    }
+                } else {
+                    String genPath = path + ".generators." + index;
+                    arenasConfig.set(genPath + ".type", p.type);
+                    p.write(arenasConfig, genPath);
+                    index++;
+                }
             }
         }
 
@@ -234,6 +313,14 @@ public class ArenaManager {
         return stranded.remove(id);
     }
 
+    /**
+     * Nom d'arene autorise : lettres, chiffres, {@code _} et {@code -}, 16
+     * caracteres maximum, pour tenir sur un panneau et dans un scoreboard.
+     */
+    public static boolean isValidName(String name) {
+        return name != null && name.matches("[A-Za-z0-9_-]{1,16}");
+    }
+
     public boolean createArena(String name) {
         if (getArena(name) != null) {
             return false;
@@ -252,6 +339,11 @@ public class ArenaManager {
         }
         arena.reset();
         arenas.remove(name.toLowerCase());
+        for (Iterator<PendingLocation> it = pending.iterator(); it.hasNext();) {
+            if (it.next().arena.equalsIgnoreCase(name)) {
+                it.remove();
+            }
+        }
         save();
         return true;
     }
@@ -273,7 +365,12 @@ public class ArenaManager {
 
     // ================= Serialisation =================
 
-    private Location readLocation(ConfigurationSection section) {
+    /**
+     * Lit une position. Si son monde n'est pas (encore) charge, elle est mise
+     * en attente dans {@link #pending} et la methode renvoie {@code null}.
+     */
+    private Location readLocation(ConfigurationSection section, String arena, String kind,
+            String team, String type) {
         if (section == null) {
             return null;
         }
@@ -281,18 +378,15 @@ public class ArenaManager {
         if (worldName == null || worldName.isEmpty()) {
             return null;
         }
+        PendingLocation raw = new PendingLocation(arena, kind, team, type, worldName,
+                section.getDouble("x"), section.getDouble("y"), section.getDouble("z"),
+                (float) section.getDouble("yaw"), (float) section.getDouble("pitch"));
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            main.getLogger().warning("Monde introuvable : " + worldName
-                    + " (verifie qu'il est bien charge au demarrage).");
+            pending.add(raw);
             return null;
         }
-        return new Location(world,
-                section.getDouble("x"),
-                section.getDouble("y"),
-                section.getDouble("z"),
-                (float) section.getDouble("yaw"),
-                (float) section.getDouble("pitch"));
+        return raw.toLocation(world);
     }
 
     private void writeLocation(String path, Location location) {
@@ -336,5 +430,50 @@ public class ArenaManager {
         arenasConfig.set(path + ".x2", cuboid.getMaxX());
         arenasConfig.set(path + ".y2", cuboid.getMaxY());
         arenasConfig.set(path + ".z2", cuboid.getMaxZ());
+    }
+
+    /** Position brute (nom du monde + coordonnees) en attente de son monde. */
+    private static final class PendingLocation {
+        static final String LOBBY = "lobby";
+        static final String SPAWN = "spawn";
+        static final String GENERATOR = "generator";
+
+        final String arena;
+        final String kind;
+        final String team;
+        final String type;
+        final String world;
+        final double x;
+        final double y;
+        final double z;
+        final float yaw;
+        final float pitch;
+
+        PendingLocation(String arena, String kind, String team, String type, String world,
+                double x, double y, double z, float yaw, float pitch) {
+            this.arena = arena;
+            this.kind = kind;
+            this.team = team;
+            this.type = type;
+            this.world = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.yaw = yaw;
+            this.pitch = pitch;
+        }
+
+        Location toLocation(World w) {
+            return new Location(w, x, y, z, yaw, pitch);
+        }
+
+        void write(FileConfiguration config, String path) {
+            config.set(path + ".world", world);
+            config.set(path + ".x", x);
+            config.set(path + ".y", y);
+            config.set(path + ".z", z);
+            config.set(path + ".yaw", yaw);
+            config.set(path + ".pitch", pitch);
+        }
     }
 }

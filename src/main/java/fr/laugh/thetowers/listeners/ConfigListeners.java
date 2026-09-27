@@ -1,5 +1,6 @@
 package fr.laugh.thetowers.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -7,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -80,8 +82,31 @@ public class ConfigListeners implements Listener {
         }
     }
 
+    /**
+     * Nom d'une arene cree depuis le menu : le message de l'admin est capte
+     * (jamais diffuse) puis traite sur le thread principal, le chat arrivant
+     * sur un thread asynchrone. Priorite LOWEST : on le retire avant que les
+     * plugins de chat ne le voient.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onChat(AsyncPlayerChatEvent event) {
+        final Player player = event.getPlayer();
+        if (!main.getArenaNaming().isNaming(player)) {
+            return;
+        }
+        event.setCancelled(true);
+        final String message = event.getMessage();
+        Bukkit.getScheduler().runTask(main, new Runnable() {
+            @Override
+            public void run() {
+                main.getArenaNaming().handleInput(player, message);
+            }
+        });
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         main.getPlacements().clear(event.getPlayer());
+        main.getArenaNaming().clear(event.getPlayer());
     }
 }

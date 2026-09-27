@@ -55,6 +55,7 @@ public class Placements {
 
     /** Demarre une session de pose : ferme le menu et annonce ce qu'il faut placer. */
     public void start(Player player, PlacementSession session) {
+        main.getArenaNaming().clear(player);
         sessions.put(player.getUniqueId(), session);
         lastClick.remove(player.getUniqueId());
         player.closeInventory();

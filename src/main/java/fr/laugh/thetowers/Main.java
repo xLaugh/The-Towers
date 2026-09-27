@@ -21,6 +21,7 @@ import fr.laugh.thetowers.compat.MCVersion;
 import fr.laugh.thetowers.compat.Proxy;
 import fr.laugh.thetowers.compat.TTMaterial;
 import fr.laugh.thetowers.config.ConfigMenu;
+import fr.laugh.thetowers.config.ArenaNaming;
 import fr.laugh.thetowers.config.Placements;
 import fr.laugh.thetowers.discord.DiscordNotifier;
 import fr.laugh.thetowers.game.GeneratorType;
@@ -36,6 +37,7 @@ import fr.laugh.thetowers.listeners.LobbyListeners;
 import fr.laugh.thetowers.listeners.MapListeners;
 import fr.laugh.thetowers.listeners.PlayerListeners;
 import fr.laugh.thetowers.listeners.SignListeners;
+import fr.laugh.thetowers.listeners.WorldListeners;
 import fr.laugh.thetowers.quest.QuestManager;
 import fr.laugh.thetowers.scoreboard.ScoreboardManager;
 import fr.laugh.thetowers.sign.JoinSignManager;
@@ -63,6 +65,7 @@ public class Main extends JavaPlugin {
     private JoinSignManager joinSignManager;
     private ConfigMenu configMenu;
     private Placements placements;
+    private ArenaNaming arenaNaming;
     private ScoreboardManager scoreboardManager;
     private Proxy proxy;
     private DiscordNotifier discordNotifier;
@@ -104,6 +107,7 @@ public class Main extends JavaPlugin {
         joinSignManager = new JoinSignManager(this);
         configMenu = new ConfigMenu(this);
         placements = new Placements(this);
+        arenaNaming = new ArenaNaming(this);
         scoreboardManager = new ScoreboardManager(this);
         // Point d'entree pour les autres plugins (softdepend: [TheTowers]).
         TheTowersAPI.init(this);
@@ -118,6 +122,7 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new SignListeners(this), this);
         pm.registerEvents(new ConfigListeners(this), this);
         pm.registerEvents(new KitListeners(this), this);
+        pm.registerEvents(new WorldListeners(this), this);
 
         // Rafraichissement des panneaux de connexion (etat + joueurs), chaque seconde.
         new BukkitRunnable() {
@@ -269,6 +274,10 @@ public class Main extends JavaPlugin {
         return placements;
     }
 
+    public ArenaNaming getArenaNaming() {
+        return arenaNaming;
+    }
+
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
     }
@@ -362,6 +371,22 @@ public class Main extends JavaPlugin {
         saveConfig();
     }
 
+    /**
+     * Un monde vient d'etre charge (souvent par un gestionnaire de mondes,
+     * apres TheTowers) : on lui rend ce qui l'attendait.
+     */
+    public void onWorldLoaded(World world) {
+        if (arenaManager != null) {
+            arenaManager.resolvePending(world);
+        }
+        if (joinSignManager != null) {
+            joinSignManager.resolvePending(world);
+        }
+        if (serverLobby == null && world.getName().equals(getConfig().getString("server-lobby.world"))) {
+            loadServerLobby();
+        }
+    }
+
     public void loadServerLobby() {
         serverLobby = null;
         ConfigurationSection section = getConfig().getConfigurationSection("server-lobby");
@@ -374,8 +399,10 @@ public class Main extends JavaPlugin {
         }
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
+            // La position reste dans config.yml : elle sera reprise par
+            // onWorldLoaded() si le monde se charge apres le plugin.
             getLogger().warning("Le monde du lobby principal (" + worldName
-                    + ") n'est pas charge. Redefinis-le avec /tt setlobby.");
+                    + ") n'est pas encore charge : lobby repris des qu'il le sera.");
             return;
         }
         serverLobby = new Location(world,

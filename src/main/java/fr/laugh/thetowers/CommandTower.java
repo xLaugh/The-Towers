@@ -166,6 +166,18 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // Raccourci /tt <arene> = /tt edit <arene>. Les sous-commandes restent
+        // prioritaires : une arene nommee "start" s'ouvre avec /tt edit start.
+        if (!ADMIN_SUBCOMMANDS.contains(subcommand)) {
+            Arena target = args.length == 1 ? arenaManager.getArena(args[0]) : null;
+            if (target == null) {
+                send(player, Messages.tr("command.unknown_subcommand"));
+            } else {
+                main.getConfigMenu().openEdit(player, target.getName());
+            }
+            return true;
+        }
+
         if ("edit".equals(subcommand)) {
             if (args.length >= 2) {
                 Arena target = arenaManager.getArena(args[1]);
@@ -182,7 +194,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
         if ("cancel".equals(subcommand)) {
             if (main.getPlacements().isPlacing(player)) {
                 main.getPlacements().cancel(player);
-            } else {
+            } else if (!main.getArenaNaming().cancel(player)) {
                 send(player, Messages.tr("config.place.not_placing"));
             }
             return true;
@@ -195,6 +207,8 @@ public class CommandTower implements CommandExecutor, TabCompleter {
         if ("create".equals(subcommand)) {
             if (args.length != 2) {
                 send(player, usage("create " + Messages.tr("command.args.arena")));
+            } else if (!ArenaManager.isValidName(args[1])) {
+                send(player, Messages.tr("command.arena_invalid_name"));
             } else if (!arenaManager.createArena(args[1])) {
                 send(player, Messages.tr("command.arena_exists"));
             } else {
@@ -647,6 +661,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             List<String> options = new ArrayList<String>(PLAYER_SUBCOMMANDS);
             if (sender.hasPermission(ADMIN)) {
                 options.addAll(ADMIN_SUBCOMMANDS);
+                options.addAll(arenaManager.getArenaNames());
             }
             return filter(options, args[0]);
         }

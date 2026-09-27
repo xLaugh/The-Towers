@@ -43,6 +43,11 @@ public class JoinSignManager {
 
     private final Main main;
     private final Map<String, JoinSign> signs = new LinkedHashMap<String, JoinSign>();
+    /**
+     * Panneaux dont le monde n'etait pas charge a la lecture : gardes bruts,
+     * reecrits a chaque sauvegarde et actives des que leur monde se charge.
+     */
+    private final List<Map<String, Object>> pendingSigns = new ArrayList<Map<String, Object>>();
 
     private File file;
     private FileConfiguration config;
@@ -194,6 +199,7 @@ public class JoinSignManager {
 
     public void load() {
         signs.clear();
+        pendingSigns.clear();
         file = new File(main.getDataFolder(), "joinsigns.yml");
         config = YamlConfiguration.loadConfiguration(file);
         ConfigurationSection root = config.getConfigurationSection("signs");
@@ -207,6 +213,8 @@ public class JoinSignManager {
             }
             World world = Bukkit.getWorld(section.getString("world", ""));
             if (world == null) {
+                // Monde pas encore charge : on garde le panneau pour plus tard.
+                pendingSigns.add(new java.util.LinkedHashMap<String, Object>(section.getValues(false)));
                 continue;
             }
             Location loc = new Location(world,
@@ -231,11 +239,33 @@ public class JoinSignManager {
             config.set(path + ".target", sign.getTarget());
             i++;
         }
+        for (Map<String, Object> raw : pendingSigns) {
+            config.set("signs." + i, raw);
+            i++;
+        }
         try {
             config.save(file);
         } catch (IOException e) {
             main.getLogger().severe("Impossible d'ecrire joinsigns.yml : " + e.getMessage());
         }
+    }
+
+    /** Active les panneaux en attente d'un monde qui vient de se charger. */
+    public void resolvePending(World world) {
+        for (java.util.Iterator<Map<String, Object>> it = pendingSigns.iterator(); it.hasNext();) {
+            Map<String, Object> raw = it.next();
+            if (!world.getName().equals(String.valueOf(raw.get("world")))) {
+                continue;
+            }
+            it.remove();
+            Location loc = new Location(world, number(raw.get("x")), number(raw.get("y")), number(raw.get("z")));
+            Object target = raw.get("target");
+            signs.put(key(loc), new JoinSign(loc, target == null ? "" : String.valueOf(target)));
+        }
+    }
+
+    private static int number(Object value) {
+        return value instanceof Number ? ((Number) value).intValue() : 0;
     }
 
     private String key(Location loc) {
