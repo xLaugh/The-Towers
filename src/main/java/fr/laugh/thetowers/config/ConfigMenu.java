@@ -175,10 +175,10 @@ public class ConfigMenu {
                 lore.add(status(arena.getChestZones().containsKey(team), "config.team.chest_zone_short"));
                 lore.add(Messages.tr("config.edit.team_click"));
                 inv.setItem(E_TEAMS[i], icon(Arena.woolOf(team),
-                        Arena.colorOf(team) + Messages.tr("config.edit.team_name", "team", team), lore));
+                        Arena.colorOf(team) + Messages.tr("config.edit.team_name", "team", Arena.displayName(team)), lore));
             } else {
                 inv.setItem(E_TEAMS[i], icon(TTMaterial.GRAY_STAINED_GLASS_PANE,
-                        ChatColor.DARK_GRAY + team, one(Messages.tr("config.edit.team_inactive"))));
+                        ChatColor.DARK_GRAY + Arena.displayName(team), one(Messages.tr("config.edit.team_inactive"))));
             }
         }
 
@@ -202,7 +202,7 @@ public class ConfigMenu {
 
         inv.setItem(T_BACK, icon(TTMaterial.ARROW, Messages.tr("config.team.back"), null));
         inv.setItem(T_INFO, icon(Arena.woolOf(team),
-                Arena.colorOf(team) + Messages.tr("config.edit.team_name", "team", team), null));
+                Arena.colorOf(team) + Messages.tr("config.edit.team_name", "team", Arena.displayName(team)), null));
 
         List<String> spawnLore = new ArrayList<String>();
         spawnLore.add(status(arena.getSpawns().containsKey(team), "config.team.spawn_short"));

@@ -163,13 +163,19 @@ public class ScoreboardManager {
         return lines;
     }
 
+    /** Initiale du nom affiche de l'equipe (R, B... ou R, B, Y, G en anglais). */
+    private static String letterOf(String team) {
+        String shown = ChatColor.stripColor(Arena.displayName(team));
+        return shown.isEmpty() ? "" : shown.substring(0, 1);
+    }
+
     private void addTeamLines(List<String> lines, Arena arena, Player viewer) {
         String myTeam = arena.getTeam(viewer);
         for (String team : arena.activeTeams()) {
             String you = team.equals(myTeam) ? Messages.tr("scoreboard.you_suffix") : "";
             lines.add(Messages.tr("scoreboard.team_line",
-                    "color", Arena.colorOf(team), "letter", team.substring(0, 1),
-                    "team", team, "score", arena.getScore(team),
+                    "color", Arena.colorOf(team), "letter", letterOf(team),
+                    "team", Arena.displayName(team), "score", arena.getScore(team),
                     "goal", arena.getPointsToWin(), "you", you));
         }
     }

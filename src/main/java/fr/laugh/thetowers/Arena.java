@@ -75,6 +75,13 @@ public class Arena {
     /** Les quatre equipes possibles, dans l'ordre d'attribution. */
     public static final String[] TEAM_NAMES = { "Rouge", "Bleu", "Jaune", "Vert" };
 
+    /**
+     * Cles de langue des equipes, dans le meme ordre que {@link #TEAM_NAMES}.
+     * {@code TEAM_NAMES} reste l'identifiant interne (celui d'arenes.yml) ; le
+     * nom montre aux joueurs vient de {@code team.name.<cle>}.
+     */
+    private static final String[] TEAM_KEYS = { "red", "blue", "yellow", "green" };
+
     /** Fenetre de temps (ms) dans laquelle des kills successifs forment une serie. */
     private static final long STREAK_WINDOW_MS = 8000L;
 
@@ -312,10 +319,10 @@ public class Arena {
         }
         for (String team : activeTeams()) {
             if (!spawns.containsKey(team)) {
-                return Messages.tr("arena.validate.missing_spawn", "team", team, "arena", name);
+                return Messages.tr("arena.validate.missing_spawn", "team", displayName(team), "arena", name);
             }
             if (!pools.containsKey(team)) {
-                return Messages.tr("arena.validate.missing_pool", "team", team, "arena", name);
+                return Messages.tr("arena.validate.missing_pool", "team", displayName(team), "arena", name);
             }
         }
         if (minPlayers < 2) {
@@ -560,7 +567,7 @@ public class Arena {
         } else if (isRunning()) {
             // Derniere personne d'une equipe partie : l'equipe abandonne.
             if (team != null && !teamsInPlay().contains(team)) {
-                broadcast(Messages.tr("arena.team_forfeit", "color", colorOf(team), "team", team));
+                broadcast(Messages.tr("arena.team_forfeit", "color", colorOf(team), "team", displayName(team)));
             }
             checkWin();
         } else {
@@ -648,7 +655,7 @@ public class Arena {
 
         String team = getTeam(player);
         player.sendMessage(Main.PREFIX + Messages.tr("arena.rejoined_self",
-                "color", colorOf(team), "team", team));
+                "color", colorOf(team), "team", displayName(team)));
         broadcast(Messages.tr("arena.broadcast.rejoined", "color", colorOf(team), "player", player.getName()));
     }
 
@@ -678,7 +685,7 @@ public class Arena {
             broadcast(Messages.tr("arena.broadcast.reconnect_expired",
                     "player", stats == null ? "?" : stats.getName()));
             if (team != null && !teamsInPlay().contains(team)) {
-                broadcast(Messages.tr("arena.team_forfeit", "color", colorOf(team), "team", team));
+                broadcast(Messages.tr("arena.team_forfeit", "color", colorOf(team), "team", displayName(team)));
             }
             expired = true;
         }
@@ -816,7 +823,7 @@ public class Arena {
                     Messages.tr("title.game_start_sub", "goal", pointsToWin));
             Sounds.gameStart(player);
             player.sendMessage(Main.PREFIX + Messages.tr("arena.your_team",
-                    "color", colorOf(team), "team", team));
+                    "color", colorOf(team), "team", displayName(team)));
         }
 
         broadcast(Messages.tr("arena.game_begin", "goal", pointsToWin, "minutes", duration / 60));
@@ -940,7 +947,7 @@ public class Arena {
             }
         }
         broadcast(Messages.tr("game.mark", "color", colorOf(team), "player", player.getName(),
-                "team", team, "score", score, "goal", pointsToWin));
+                "team", displayName(team), "score", score, "goal", pointsToWin));
 
         if (score >= pointsToWin) {
             end(team);
@@ -1034,7 +1041,7 @@ public class Arena {
         }
         String leader = uniqueLeader();
         if (leader != null) {
-            broadcast(Messages.tr("game.time_up_winner", "color", colorOf(leader), "team", leader));
+            broadcast(Messages.tr("game.time_up_winner", "color", colorOf(leader), "team", displayName(leader)));
             end(leader);
             return;
         }
@@ -1103,7 +1110,7 @@ public class Arena {
         if (winningTeam == null) {
             broadcast(Messages.tr("arena.end_no_winner"));
         } else {
-            broadcast(Messages.tr("arena.end_winner", "color", colorOf(winningTeam), "team", winningTeam));
+            broadcast(Messages.tr("arena.end_winner", "color", colorOf(winningTeam), "team", displayName(winningTeam)));
             spawnVictoryFireworks(winningTeam);
         }
 
@@ -1119,7 +1126,7 @@ public class Arena {
                 title = Messages.tr("title.defeat");
             }
             String subtitle = winningTeam == null ? ""
-                    : Messages.tr("title.winner_sub", "color", colorOf(winningTeam), "team", winningTeam);
+                    : Messages.tr("title.winner_sub", "color", colorOf(winningTeam), "team", displayName(winningTeam));
             Titles.send(player, title, subtitle);
             Sounds.gameEnd(player);
         }
@@ -1380,14 +1387,51 @@ public class Arena {
         return TTMaterial.RED_WOOL;
     }
 
-    /** Nom d'equipe canonique correspondant a une saisie utilisateur. */
+    /**
+     * Nom d'equipe canonique correspondant a une saisie utilisateur. Sont
+     * acceptes : l'identifiant interne (Rouge), la cle anglaise (red) et le nom
+     * affiche dans la langue du serveur.
+     */
     public static String matchTeamName(String input) {
-        for (String teamName : TEAM_NAMES) {
-            if (teamName.equalsIgnoreCase(input)) {
-                return teamName;
+        if (input == null) {
+            return null;
+        }
+        for (int i = 0; i < TEAM_NAMES.length; i++) {
+            if (TEAM_NAMES[i].equalsIgnoreCase(input) || TEAM_KEYS[i].equalsIgnoreCase(input)
+                    || ChatColor.stripColor(displayName(TEAM_NAMES[i])).equalsIgnoreCase(input)) {
+                return TEAM_NAMES[i];
             }
         }
         return null;
+    }
+
+    /**
+     * Nom d'une equipe tel qu'il est montre aux joueurs, dans la langue du
+     * serveur (cle {@code team.name.<cle>} du fichier de langue).
+     */
+    public static String displayName(String teamName) {
+        if (teamName == null) {
+            return "";
+        }
+        for (int i = 0; i < TEAM_NAMES.length; i++) {
+            if (TEAM_NAMES[i].equalsIgnoreCase(teamName)) {
+                return Messages.tr("team.name." + TEAM_KEYS[i]);
+            }
+        }
+        return teamName;
+    }
+
+    /**
+     * Noms d'equipes a proposer dans une commande : le nom affiche, ou
+     * l'identifiant interne si l'admin a mis un nom avec des espaces.
+     */
+    public static List<String> teamChoices() {
+        List<String> choices = new ArrayList<String>();
+        for (String teamName : TEAM_NAMES) {
+            String shown = ChatColor.stripColor(displayName(teamName));
+            choices.add(shown.isEmpty() || shown.indexOf(' ') >= 0 ? teamName : shown);
+        }
+        return choices;
     }
 
     private static void putOrRemove(Map<String, Cuboid> map, String team, Cuboid zone) {

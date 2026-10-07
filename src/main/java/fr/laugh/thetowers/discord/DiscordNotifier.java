@@ -44,7 +44,7 @@ public final class DiscordNotifier {
         final String message = winningTeam == null
                 ? Messages.tr("discord.game_no_winner", "arena", arena.getName(), "players", playerCount)
                 : Messages.tr("discord.game_won",
-                        "team", winningTeam, "arena", arena.getName(), "players", playerCount);
+                        "team", Arena.displayName(winningTeam), "arena", arena.getName(), "players", playerCount);
 
         Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
             @Override

@@ -91,15 +91,15 @@ public class Placements {
             case LOBBY:
                 return Messages.tr("config.place.what.lobby");
             case SPAWN:
-                return Messages.tr("config.place.what.spawn", "color", color, "team", team);
+                return Messages.tr("config.place.what.spawn", "color", color, "team", Arena.displayName(team));
             case GENERATOR:
                 return Messages.tr("config.place.what.generator", "type", session.getGeneratorType());
             case POOL:
-                return Messages.tr("config.place.what.pool", "color", color, "team", team);
+                return Messages.tr("config.place.what.pool", "color", color, "team", Arena.displayName(team));
             case SPAWN_ZONE:
-                return Messages.tr("config.place.what.spawn_zone", "color", color, "team", team);
+                return Messages.tr("config.place.what.spawn_zone", "color", color, "team", Arena.displayName(team));
             case CHEST_ZONE:
-                return Messages.tr("config.place.what.chest_zone", "color", color, "team", team);
+                return Messages.tr("config.place.what.chest_zone", "color", color, "team", Arena.displayName(team));
             default:
                 return "";
         }

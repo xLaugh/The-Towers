@@ -346,14 +346,14 @@ public class CommandTower implements CommandExecutor, TabCompleter {
         }
         String team = Arena.matchTeamName(args[2]);
         if (team == null) {
-            send(player, Messages.tr("command.unknown_team", "teams", Arrays.toString(Arena.TEAM_NAMES)));
+            send(player, Messages.tr("command.unknown_team", "teams", Arena.teamChoices().toString()));
             return;
         }
 
         if ("setspawn".equals(subcommand)) {
             arena.setSpawn(team, player.getLocation());
             arenaManager.save();
-            send(player, Messages.tr("command.spawn_set", "color", Arena.colorOf(team), "team", team));
+            send(player, Messages.tr("command.spawn_set", "color", Arena.colorOf(team), "team", Arena.displayName(team)));
             return;
         }
         if (clear) {
@@ -479,7 +479,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
 
         for (String team : arena.activeTeams()) {
             player.sendMessage(Messages.tr("command.info_team",
-                    "color", Arena.colorOf(team), "team", team,
+                    "color", Arena.colorOf(team), "team", Arena.displayName(team),
                     "spawn", format(arena.getSpawns().get(team)),
                     "pool", format(arena.getPools().get(team)),
                     "spawnzone", format(arena.getSpawnZones().get(team)),
@@ -690,7 +690,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
 
         if (args.length == 3) {
             if (TEAM_SUBCOMMANDS.contains(sub)) {
-                return filter(Arrays.asList(Arena.TEAM_NAMES), args[2]);
+                return filter(Arena.teamChoices(), args[2]);
             }
             if ("addgenerator".equals(sub) || "cleargenerators".equals(sub)) {
                 return filter(new ArrayList<String>(main.getGeneratorTypes().keySet()), args[2]);

@@ -78,7 +78,7 @@ public class GameListeners implements Listener {
         if (block.getState() instanceof InventoryHolder) {
             event.setCancelled(true);
             player.sendMessage(Main.PREFIX + Messages.tr("game.chest_locked",
-                    "color", Arena.colorOf(owner), "team", owner));
+                    "color", Arena.colorOf(owner), "team", Arena.displayName(owner)));
         }
     }
 

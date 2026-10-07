@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import fr.laugh.thetowers.Arena;
 import fr.laugh.thetowers.Main;
 import fr.laugh.thetowers.game.GameStats;
+import fr.laugh.thetowers.lang.Messages;
 import fr.laugh.thetowers.stats.PlayerStats;
 import fr.laugh.thetowers.task.GameCycle;
 
@@ -98,7 +99,7 @@ public final class PlaceholderValues {
             return online == null ? "" : ChatColor.stripColor(main.getKitManager().getSelected(online).getDisplayName());
         }
         if ("ingame".equals(key)) {
-            return arena != null && arena.isRunning() ? "oui" : "non";
+            return yesNo(arena != null && arena.isRunning());
         }
         if (arena == null) {
             // Toutes les cles restantes concernent une arene : vide hors partie,
@@ -113,10 +114,10 @@ public final class PlaceholderValues {
             return arena.getState().name();
         }
         if ("team".equals(key)) {
-            return team == null ? "" : team;
+            return Arena.displayName(team);
         }
         if ("team_color".equals(key)) {
-            return team == null ? "" : Arena.colorOf(team) + team;
+            return team == null ? "" : Arena.colorOf(team) + Arena.displayName(team);
         }
         if ("score".equals(key)) {
             return team == null ? "" : String.valueOf(arena.getScore(team));
@@ -132,7 +133,7 @@ public final class PlaceholderValues {
             return GameCycle.clock(arena.getTimeLeft());
         }
         if ("overtime".equals(key)) {
-            return arena.isOvertime() ? "oui" : "non";
+            return yesNo(arena.isOvertime());
         }
         if ("players".equals(key)) {
             return String.valueOf(arena.getPlayerCount());
@@ -150,6 +151,11 @@ public final class PlaceholderValues {
             return String.valueOf(value);
         }
         return null;
+    }
+
+    /** "oui" / "non" dans la langue du serveur (cles placeholder.yes / placeholder.no). */
+    private static String yesNo(boolean value) {
+        return Messages.tr(value ? "placeholder.yes" : "placeholder.no");
     }
 
     private static boolean isArenaKey(String key) {
