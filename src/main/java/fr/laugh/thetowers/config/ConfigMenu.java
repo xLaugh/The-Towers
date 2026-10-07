@@ -48,6 +48,7 @@ public class ConfigMenu {
     private static final int E_POINTS = 23;
     private static final int E_DURATION = 24;
     private static final int E_BOWS = 25;
+    private static final int E_SPECTATORS = 34;
     private static final int E_LOBBY = 29;
     private static final int E_GENERATORS = 31;
     private static final int E_REGEN = 33;
@@ -147,6 +148,13 @@ public class ConfigMenu {
         inv.setItem(E_BOWS, icon(TTMaterial.BOW,
                 Messages.tr("config.edit.bows_name", "state", state(arena.isAllowBows())),
                 one(Messages.tr("config.edit.toggle_click"))));
+
+        List<String> spectatorLore = new ArrayList<String>();
+        spectatorLore.add(Messages.tr("config.edit.spectators_lore"));
+        spectatorLore.add(Messages.tr("config.edit.toggle_click"));
+        inv.setItem(E_SPECTATORS, icon(TTMaterial.COMPASS,
+                Messages.tr("config.edit.spectators_name", "state", state(arena.isAllowSpectators())),
+                spectatorLore));
 
         boolean lobbySet = arena.getLobby() != null;
         List<String> lobbyLore = new ArrayList<String>();
@@ -354,6 +362,9 @@ public class ConfigMenu {
                 break;
             case E_BOWS:
                 arena.setAllowBows(!arena.isAllowBows());
+                break;
+            case E_SPECTATORS:
+                arena.setAllowSpectators(!arena.isAllowSpectators());
                 break;
             case E_LOBBY:
                 main.getPlacements().start(player, new PlacementSession(arenaName,

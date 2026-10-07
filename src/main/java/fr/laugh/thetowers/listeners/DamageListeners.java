@@ -53,7 +53,7 @@ public class DamageListeners implements Listener {
             } else {
                 // Au lobby d'attente ou en fin de partie : on rattrape le joueur.
                 event.setCancelled(true);
-                Location lobby = arena.getLobby();
+                Location lobby = arena.isSpectator(player) ? arena.spectatorSpot() : arena.getLobby();
                 if (lobby != null && lobby.getWorld() != null) {
                     player.setFallDistance(0f);
                     player.teleport(lobby);

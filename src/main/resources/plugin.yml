@@ -32,6 +32,9 @@ permissions:
   thetowers.join:
     description: Permet de rejoindre une arene.
     default: true
+  thetowers.spectate:
+    description: Permet de regarder une partie en cours (/tt spectate).
+    default: true
   thetowers.arenamode.bypass:
     description: N'est pas auto-rejoint quand le serveur est en mode arene.
     default: op

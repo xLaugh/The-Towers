@@ -73,7 +73,7 @@ public class ScoreboardManager {
             if (!arena.isRunning()) {
                 continue;
             }
-            for (Player player : arena.onlinePlayers()) {
+            for (Player player : arena.audience()) {
                 seen.add(player.getUniqueId());
                 String title = resolve(player, titleTemplate);
                 Sidebar sidebar = sidebars.get(player.getUniqueId());

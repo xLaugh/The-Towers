@@ -90,6 +90,7 @@ public class ArenaManager {
             arena.setPointsToWin(section.getInt("points", main.getDefaultPointsToWin()));
             arena.setDuration(section.getInt("duration", main.getGameDuration()));
             arena.setAllowBows(section.getBoolean("allowBows", true));
+            arena.setAllowSpectators(section.getBoolean("allowSpectators", false));
             arena.setLobby(readLocation(section.getConfigurationSection("lobby"),
                     name, PendingLocation.LOBBY, null, null));
 
@@ -196,6 +197,7 @@ public class ArenaManager {
             arenasConfig.set(path + ".points", arena.getPointsToWin());
             arenasConfig.set(path + ".duration", arena.getDuration());
             arenasConfig.set(path + ".allowBows", arena.isAllowBows());
+            arenasConfig.set(path + ".allowSpectators", arena.isAllowSpectators());
             writeLocation(path + ".lobby", arena.getLobby());
 
             for (String team : Arena.TEAM_NAMES) {

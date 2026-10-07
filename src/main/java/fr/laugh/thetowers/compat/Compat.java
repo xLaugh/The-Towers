@@ -5,6 +5,7 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  * Petites operations dont l'ecriture "naturelle" casserait sur une partie de
@@ -60,7 +61,40 @@ public final class Compat {
 
         player.setAllowFlight(mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR);
         player.setFlying(false);
+        player.setCanPickupItems(true);
         player.setGameMode(mode);
+    }
+
+    /**
+     * Met un joueur en spectateur : aventure, en vol, invisible et sans rien
+     * ramasser. Le mode "spectateur" de Minecraft n'est pas utilise car il
+     * cache la hotbar, donc la boussole et la barriere du spectateur.
+     */
+    public static void makeSpectator(Player player) {
+        resetPlayer(player, GameMode.ADVENTURE);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setCanPickupItems(false);
+        // Invisible meme si masquer le joueur (voir setHidden) echoue.
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,
+                Integer.MAX_VALUE, 0, true, false));
+    }
+
+    /**
+     * Cache (ou montre) un joueur a un autre. {@code hidePlayer(Player)} est
+     * deprecie depuis la 1.12 mais present jusqu'en 1.21 ; on rattrape
+     * l'erreur si un serveur le retirait un jour.
+     */
+    public static void setHidden(Player viewer, Player target, boolean hidden) {
+        try {
+            if (hidden) {
+                viewer.hidePlayer(target);
+            } else {
+                viewer.showPlayer(target);
+            }
+        } catch (Throwable ignored) {
+            // Sans masquage, l'invisibilite de makeSpectator suffit.
+        }
     }
 
     /**

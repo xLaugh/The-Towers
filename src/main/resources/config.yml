@@ -98,6 +98,34 @@ reconnection:
   enabled: true
   timeout: 180
 
+# Spectateurs : un joueur peut regarder une partie en cours avec
+# /tt spectate <arene>, sans y participer (ni equipe, ni stats). Il vole, est
+# invisible et ne peut rien toucher. Chaque arene doit l'autoriser (bouton du
+# menu d'edition, ou /tt spectators <arene> on) : desactive par defaut, a
+# activer pour les arenes d'evenement.
+#   enabled       : false = aucun spectateur nulle part
+#   max-per-arena : nombre maximal de spectateurs par arene
+# Permission : thetowers.spectate (donnee a tous par defaut).
+spectator:
+  enabled: true
+  max-per-arena: 5
+
+# Chat des parties. Pendant une partie, un message normal n'est lu que par
+# l'equipe de l'auteur ; un message qui commence par all-prefix est lu par tout
+# le monde. Avant le lancement et a l'ecran de fin, le chat est general. Une
+# etiquette de couleur est ajoutee devant le message (textes : team.* et chat.*
+# du fichier de langue). /tt chat all|team change le chat par defaut d'un joueur.
+#   enabled    : false = le plugin ne touche pas au chat
+#   scope      : qui est "tout le monde" pour un message a tous
+#                  arena = les joueurs et spectateurs de la partie (les joueurs
+#                          en partie ne recoivent plus le chat du hub)
+#                  world = les joueurs du monde de l'auteur
+#   all-prefix : debut de message pour parler a tout le monde
+chat:
+  enabled: true
+  scope: arena
+  all-prefix: "!"
+
 # Regeneration de la map : a la fin de chaque partie, le terrain modifie pendant
 # la manche (blocs casses, poses, explosions, feu, liquides) ET le contenu des
 # coffres ouverts sont remis a leur etat d'origine. Mettre a false pour laisser

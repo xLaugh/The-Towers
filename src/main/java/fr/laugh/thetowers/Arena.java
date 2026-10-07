@@ -45,6 +45,7 @@ import fr.laugh.thetowers.game.KitDefinition;
 import fr.laugh.thetowers.game.PlayerSnapshot;
 import fr.laugh.thetowers.lang.Messages;
 import fr.laugh.thetowers.lobby.LobbyItems;
+import fr.laugh.thetowers.lobby.SpectatorItems;
 import fr.laugh.thetowers.map.MapTracker;
 import fr.laugh.thetowers.quest.QuestType;
 import fr.laugh.thetowers.region.Cuboid;
@@ -111,6 +112,8 @@ public class Arena {
     /** Duree maximale de la partie, en secondes. */
     private int duration;
     private boolean allowBows = true;
+    /** Autorise les spectateurs (/tt spectate) pendant la partie. Desactive par defaut. */
+    private boolean allowSpectators;
     private Location lobby;
     private final Map<String, Location> spawns = new LinkedHashMap<String, Location>();
     private final Map<String, Cuboid> pools = new LinkedHashMap<String, Cuboid>();
@@ -124,6 +127,8 @@ public class Arena {
 
     private State state = State.WAITING;
     private final List<UUID> players = new ArrayList<UUID>();
+    /** Spectateurs : a part des joueurs, ils ne comptent ni dans les effectifs ni dans la partie. */
+    private final Set<UUID> spectators = new LinkedHashSet<UUID>();
     private final Map<UUID, String> teamOf = new HashMap<UUID, String>();
     private final Set<UUID> startVotes = new LinkedHashSet<UUID>();
     private final Map<String, Integer> scores = new LinkedHashMap<String, Integer>();
@@ -212,6 +217,14 @@ public class Arena {
 
     public void setAllowBows(boolean allowBows) {
         this.allowBows = allowBows;
+    }
+
+    public boolean isAllowSpectators() {
+        return allowSpectators;
+    }
+
+    public void setAllowSpectators(boolean allowSpectators) {
+        this.allowSpectators = allowSpectators;
     }
 
     public Location getLobby() {
@@ -438,8 +451,36 @@ public class Arena {
         return Collections.unmodifiableList(players);
     }
 
+    /** Vrai si le joueur est dans cette arene, comme joueur ou comme spectateur. */
     public boolean contains(Player player) {
-        return players.contains(player.getUniqueId());
+        return players.contains(player.getUniqueId()) || spectators.contains(player.getUniqueId());
+    }
+
+    public boolean isSpectator(Player player) {
+        return spectators.contains(player.getUniqueId());
+    }
+
+    public int getSpectatorCount() {
+        return spectators.size();
+    }
+
+    /** Spectateurs actuellement connectes. */
+    public List<Player> onlineSpectators() {
+        List<Player> online = new ArrayList<Player>();
+        for (UUID id : spectators) {
+            Player player = Bukkit.getPlayer(id);
+            if (player != null && player.isOnline()) {
+                online.add(player);
+            }
+        }
+        return online;
+    }
+
+    /** Joueurs et spectateurs connectes. */
+    public List<Player> audience() {
+        List<Player> online = onlinePlayers();
+        online.addAll(onlineSpectators());
+        return online;
     }
 
     /** Vrai si le joueur joue dans cette partie en cours (il a une equipe). */
@@ -500,7 +541,7 @@ public class Arena {
     /** Envoie un message aux seuls joueurs de cette arene. */
     public void broadcast(String message) {
         String prefixed = Main.PREFIX + message;
-        for (Player player : onlinePlayers()) {
+        for (Player player : audience()) {
             player.sendMessage(prefixed);
         }
     }
@@ -517,6 +558,9 @@ public class Arena {
             return Messages.tr("arena.join.already_in");
         }
         if (state != State.WAITING && state != State.STARTING) {
+            if (state == State.PLAYING && allowSpectators && main.isSpectatorEnabled()) {
+                return Messages.tr("arena.join.in_progress_spectate", "arena", name);
+            }
             return Messages.tr("arena.join.in_progress");
         }
         if (isFull()) {
@@ -541,9 +585,78 @@ public class Arena {
         return null;
     }
 
+    /**
+     * Fait regarder la partie a un joueur. Il n'est pas un joueur : ni compte,
+     * ni dans une equipe, ni dans les stats.
+     *
+     * @return la raison du refus, ou {@code null} en cas de succes
+     */
+    public String spectate(Player player) {
+        if (contains(player)) {
+            return Messages.tr("arena.join.already_in");
+        }
+        if (!allowSpectators || !main.isSpectatorEnabled()) {
+            return Messages.tr("spectator.disabled");
+        }
+        Location spot = spectatorSpot();
+        if (state != State.PLAYING || spot == null) {
+            return Messages.tr("spectator.not_running");
+        }
+        if (spectators.size() >= main.getSpectatorMax()) {
+            return Messages.tr("spectator.full", "max", main.getSpectatorMax());
+        }
+
+        Compat.makeSpectator(player);
+        player.teleport(spot);
+        SpectatorItems.give(player);
+
+        // Invisible aux autres, mais il voit les autres spectateurs.
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (other.equals(player)) {
+                continue;
+            }
+            if (spectators.contains(other.getUniqueId())) {
+                Compat.setHidden(player, other, false);
+            } else {
+                Compat.setHidden(other, player, true);
+            }
+        }
+        spectators.add(player.getUniqueId());
+        return null;
+    }
+
+    /** Point d'arrivee d'un spectateur : la base d'une equipe, a defaut le lobby. */
+    public Location spectatorSpot() {
+        for (String team : activeTeams()) {
+            Location spawn = spawns.get(team);
+            if (spawn != null && spawn.getWorld() != null) {
+                return spawn;
+            }
+        }
+        return lobby;
+    }
+
+    /** Retire un spectateur : redevient visible, et rejoint le lobby si demande. */
+    private void releaseSpectator(Player player, boolean teleportToLobby) {
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (!other.equals(player)) {
+                Compat.setHidden(other, player, false);
+            }
+        }
+        if (teleportToLobby && player.isOnline()) {
+            Compat.resetPlayer(player, GameMode.ADVENTURE);
+            main.getScoreboardManager().clear(player);
+            main.returnToLobby(player);
+        }
+    }
+
     /** Fait sortir un joueur, volontairement ou par deconnexion. */
     public void leave(Player player, boolean teleportToLobby) {
         UUID id = player.getUniqueId();
+        if (spectators.remove(id)) {
+            releaseSpectator(player, teleportToLobby);
+            return;
+        }
         if (!players.remove(id)) {
             return;
         }
@@ -639,6 +752,10 @@ public class Arena {
         }
         reconnectDeadlines.remove(id);
         players.add(id);
+        // Un spectateur present pendant son absence doit lui rester invisible.
+        for (Player spectator : onlineSpectators()) {
+            Compat.setHidden(player, spectator, true);
+        }
 
         PlayerSnapshot snapshot = snapshots.remove(id);
         if (snapshot == null) {
@@ -1284,6 +1401,10 @@ public class Arena {
             main.getScoreboardManager().clear(player);
             main.returnToLobby(player);
         }
+        for (Player spectator : onlineSpectators()) {
+            releaseSpectator(spectator, true);
+        }
+        spectators.clear();
 
         // Les deconnectes qui n'ont pas pu revenir se reconnecteront au milieu
         // de la map : on les signale pour les renvoyer au lobby a leur retour.

@@ -41,15 +41,16 @@ public class CommandTower implements CommandExecutor, TabCompleter {
 
     private static final String ADMIN = "thetowers.admin";
     private static final String JOIN = "thetowers.join";
+    private static final String SPECTATE = "thetowers.spectate";
 
     private static final List<String> PLAYER_SUBCOMMANDS =
-            Arrays.asList("join", "leave", "list", "stats", "top", "quests", "kit", "help");
+            Arrays.asList("join", "leave", "list", "stats", "top", "quests", "kit", "spectate", "chat", "help");
 
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList(
             "edit", "cancel", "create", "delete", "setlobby", "setarenalobby", "setspawn",
             "setpool", "setspawnzone", "setchestzone", "clearzone", "addgenerator",
             "cleargenerators", "setteams", "setplayersperteam", "setminplayers", "setmaxplayers",
-            "setpoints", "setduration", "bows", "save", "info", "start", "stop", "reload");
+            "setpoints", "setduration", "bows", "spectators", "save", "info", "start", "stop", "reload");
 
     /** Sous-commandes qui prennent une equipe en 3e argument. */
     private static final List<String> TEAM_SUBCOMMANDS =
@@ -158,6 +159,43 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             } else {
                 main.getKitMenu().choose(player, kit);
             }
+            return true;
+        }
+
+        if ("spectate".equals(subcommand)) {
+            if (!checkPermission(player, SPECTATE)) {
+                return true;
+            }
+            if (args.length != 2) {
+                send(player, usage("spectate " + Messages.tr("command.args.arena")));
+                return true;
+            }
+            Arena watched = arenaManager.getArena(args[1]);
+            if (watched == null) {
+                send(player, Messages.tr("command.arena_not_found", "name", args[1]));
+                return true;
+            }
+            Arena inside = arenaManager.getArenaOf(player);
+            if (inside != null) {
+                send(player, Messages.tr("command.already_in_arena", "arena", inside.getName()));
+                return true;
+            }
+            String problem = watched.spectate(player);
+            if (problem != null) {
+                send(player, Messages.tr("command.join_failed", "reason", problem));
+            } else {
+                send(player, Messages.tr("spectator.joined", "arena", watched.getName()));
+            }
+            return true;
+        }
+        if ("chat".equals(subcommand)) {
+            if (args.length != 2 || !("team".equalsIgnoreCase(args[1]) || "all".equalsIgnoreCase(args[1]))) {
+                send(player, usage("chat <team|all>"));
+                return true;
+            }
+            boolean all = "all".equalsIgnoreCase(args[1]);
+            main.getChatListeners().setDefaultAll(player, all);
+            send(player, Messages.tr(all ? "chat.mode_all" : "chat.mode_team", "prefix", main.getChatAllPrefix()));
             return true;
         }
 
@@ -270,6 +308,18 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             int removed = arena.clearGenerators(args.length >= 3 ? args[2] : null);
             arenaManager.save();
             send(player, Messages.tr("command.generators_cleared", "count", removed));
+            return true;
+        }
+
+        if ("spectators".equals(subcommand)) {
+            if (args.length != 3 || !("on".equalsIgnoreCase(args[2]) || "off".equalsIgnoreCase(args[2]))) {
+                send(player, usage("spectators " + Messages.tr("command.args.arena") + " <on|off>"));
+                return true;
+            }
+            arena.setAllowSpectators("on".equalsIgnoreCase(args[2]));
+            arenaManager.save();
+            send(player, Messages.tr(arena.isAllowSpectators() ? "command.spectators_on" : "command.spectators_off",
+                    "arena", arena.getName()));
             return true;
         }
 
@@ -606,6 +656,8 @@ public class CommandTower implements CommandExecutor, TabCompleter {
         sender.sendMessage(Messages.tr("command.help_top"));
         sender.sendMessage(Messages.tr("command.help_quests"));
         sender.sendMessage(Messages.tr("command.help_kit"));
+        sender.sendMessage(Messages.tr("command.help_spectate"));
+        sender.sendMessage(Messages.tr("command.help_chat"));
         if (!sender.hasPermission(ADMIN)) {
             return;
         }
@@ -621,6 +673,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
         sender.sendMessage(Messages.tr("command.help_setteams"));
         sender.sendMessage(Messages.tr("command.help_setplayers"));
         sender.sendMessage(Messages.tr("command.help_rules"));
+        sender.sendMessage(Messages.tr("command.help_spectators"));
         sender.sendMessage(Messages.tr("command.help_save"));
         sender.sendMessage(Messages.tr("command.help_reload"));
     }
@@ -681,6 +734,9 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             if ("stats".equals(sub)) {
                 return filter(onlinePlayerNames(), args[1]);
             }
+            if ("chat".equals(sub)) {
+                return filter(Arrays.asList("team", "all"), args[1]);
+            }
             if (!"setlobby".equals(sub) && !"create".equals(sub) && !"help".equals(sub)
                     && !"leave".equals(sub) && !"list".equals(sub) && !"quests".equals(sub)
                     && !"cancel".equals(sub) && !"reload".equals(sub)) {
@@ -695,7 +751,7 @@ public class CommandTower implements CommandExecutor, TabCompleter {
             if ("addgenerator".equals(sub) || "cleargenerators".equals(sub)) {
                 return filter(new ArrayList<String>(main.getGeneratorTypes().keySet()), args[2]);
             }
-            if ("bows".equals(sub)) {
+            if ("bows".equals(sub) || "spectators".equals(sub)) {
                 return filter(Arrays.asList("on", "off"), args[2]);
             }
         }

@@ -27,8 +27,10 @@ import fr.laugh.thetowers.discord.DiscordNotifier;
 import fr.laugh.thetowers.game.GeneratorType;
 import fr.laugh.thetowers.game.KitManager;
 import fr.laugh.thetowers.game.KitMenu;
+import fr.laugh.thetowers.game.SpectatorMenu;
 import fr.laugh.thetowers.lang.Messages;
 import fr.laugh.thetowers.listeners.BlocksListeners;
+import fr.laugh.thetowers.listeners.ChatListeners;
 import fr.laugh.thetowers.listeners.ConfigListeners;
 import fr.laugh.thetowers.listeners.DamageListeners;
 import fr.laugh.thetowers.listeners.GameListeners;
@@ -37,6 +39,7 @@ import fr.laugh.thetowers.listeners.LobbyListeners;
 import fr.laugh.thetowers.listeners.MapListeners;
 import fr.laugh.thetowers.listeners.PlayerListeners;
 import fr.laugh.thetowers.listeners.SignListeners;
+import fr.laugh.thetowers.listeners.SpectatorListeners;
 import fr.laugh.thetowers.listeners.WorldListeners;
 import fr.laugh.thetowers.quest.QuestManager;
 import fr.laugh.thetowers.scoreboard.ScoreboardManager;
@@ -66,6 +69,8 @@ public class Main extends JavaPlugin {
     private ConfigMenu configMenu;
     private Placements placements;
     private ArenaNaming arenaNaming;
+    private SpectatorMenu spectatorMenu;
+    private ChatListeners chatListeners;
     private ScoreboardManager scoreboardManager;
     private Proxy proxy;
     private DiscordNotifier discordNotifier;
@@ -108,6 +113,8 @@ public class Main extends JavaPlugin {
         configMenu = new ConfigMenu(this);
         placements = new Placements(this);
         arenaNaming = new ArenaNaming(this);
+        spectatorMenu = new SpectatorMenu(this);
+        chatListeners = new ChatListeners(this);
         scoreboardManager = new ScoreboardManager(this);
         // Point d'entree pour les autres plugins (softdepend: [TheTowers]).
         TheTowersAPI.init(this);
@@ -123,6 +130,8 @@ public class Main extends JavaPlugin {
         pm.registerEvents(new ConfigListeners(this), this);
         pm.registerEvents(new KitListeners(this), this);
         pm.registerEvents(new WorldListeners(this), this);
+        pm.registerEvents(new SpectatorListeners(this), this);
+        pm.registerEvents(chatListeners, this);
 
         // Rafraichissement des panneaux de connexion (etat + joueurs), chaque seconde.
         new BukkitRunnable() {
@@ -276,6 +285,14 @@ public class Main extends JavaPlugin {
 
     public ArenaNaming getArenaNaming() {
         return arenaNaming;
+    }
+
+    public SpectatorMenu getSpectatorMenu() {
+        return spectatorMenu;
+    }
+
+    public ChatListeners getChatListeners() {
+        return chatListeners;
     }
 
     public ScoreboardManager getScoreboardManager() {
@@ -441,6 +458,32 @@ public class Main extends JavaPlugin {
     /** Secondes entre la fin de partie et le renvoi au lobby. */
     public int getEndDelay() {
         return Math.max(1, getConfig().getInt("end-delay", 10));
+    }
+
+    /** Interrupteur general des spectateurs (en plus du reglage de chaque arene). */
+    public boolean isSpectatorEnabled() {
+        return getConfig().getBoolean("spectator.enabled", true);
+    }
+
+    /** Nombre maximal de spectateurs par arene. */
+    public int getSpectatorMax() {
+        return Math.max(1, getConfig().getInt("spectator.max-per-arena", 5));
+    }
+
+    /** Vrai si le plugin gere le chat des parties (etiquettes d'equipe, filtrage). */
+    public boolean isChatEnabled() {
+        return getConfig().getBoolean("chat.enabled", true);
+    }
+
+    /** Portee du chat a tout le monde : {@code arena} (la partie) ou {@code world} (le monde). */
+    public String getChatScope() {
+        return "world".equalsIgnoreCase(getConfig().getString("chat.scope", "arena")) ? "world" : "arena";
+    }
+
+    /** Debut de message qui l'envoie a tout le monde plutot qu'a l'equipe. */
+    public String getChatAllPrefix() {
+        String prefix = getConfig().getString("chat.all-prefix", "!");
+        return prefix == null || prefix.isEmpty() ? "!" : prefix;
     }
 
     /** Vrai si un joueur deconnecte en partie garde sa place pour revenir. */
