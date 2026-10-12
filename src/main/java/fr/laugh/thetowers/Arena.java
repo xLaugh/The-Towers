@@ -134,6 +134,8 @@ public class Arena {
     private final Map<String, Integer> scores = new LinkedHashMap<String, Integer>();
     private final Map<UUID, GameStats> gameStats = new LinkedHashMap<UUID, GameStats>();
     private final Map<UUID, Long> nextMark = new HashMap<UUID, Long>();
+    // Fin (ms) de la protection d'un joueur qui vient d'apparaitre.
+    private final Map<UUID, Long> protectedUntil = new HashMap<UUID, Long>();
     // Joueurs deconnectes en cours de partie qui peuvent encore revenir : leur
     // equipe (teamOf) est conservee, avec l'echeance de leur retour (ms).
     private final Map<UUID, Long> reconnectDeadlines = new LinkedHashMap<UUID, Long>();
@@ -488,6 +490,27 @@ public class Arena {
         return isRunning() && teamOf.containsKey(player.getUniqueId());
     }
 
+    /**
+     * Vrai tant qu'un joueur vient d'apparaitre et ne peut pas etre blesse
+     * ({@code respawn-protection} de config.yml). Elle tombe a l'expiration du
+     * delai, ou des qu'il frappe quelqu'un.
+     */
+    public boolean hasSpawnProtection(Player player) {
+        Long until = protectedUntil.get(player.getUniqueId());
+        return until != null && System.currentTimeMillis() < until.longValue();
+    }
+
+    public void clearSpawnProtection(Player player) {
+        protectedUntil.remove(player.getUniqueId());
+    }
+
+    private void protect(Player player) {
+        int seconds = main.getRespawnProtection();
+        if (seconds > 0) {
+            protectedUntil.put(player.getUniqueId(), Long.valueOf(System.currentTimeMillis() + seconds * 1000L));
+        }
+    }
+
     public int getPlayerCount() {
         return players.size();
     }
@@ -662,6 +685,7 @@ public class Arena {
         }
         startVotes.remove(id);
         nextMark.remove(id);
+        protectedUntil.remove(id);
         String team = teamOf.remove(id);
 
         if (teleportToLobby && player.isOnline()) {
@@ -768,6 +792,7 @@ public class Arena {
                 player.teleport(spawn);
             }
             snapshot.restore(player);
+            protect(player);
         }
 
         String team = getTeam(player);
@@ -962,6 +987,7 @@ public class Arena {
             player.teleport(spawn);
         }
         main.getKitManager().give(player, armorColorOf(team), allowBows);
+        protect(player);
     }
 
     /** Point de reapparition d'un joueur : sa base en partie, le lobby sinon. */
@@ -1428,6 +1454,7 @@ public class Arena {
         scores.clear();
         gameStats.clear();
         nextMark.clear();
+        protectedUntil.clear();
         overtime = false;
         timeLeft = 0;
 

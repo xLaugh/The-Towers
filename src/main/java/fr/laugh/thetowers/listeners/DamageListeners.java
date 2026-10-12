@@ -65,6 +65,14 @@ public class DamageListeners implements Listener {
         // Hors partie (attente, compte a rebours, fin), on protege les joueurs.
         if (!arena.isParticipant(player)) {
             event.setCancelled(true);
+            return;
+        }
+
+        // Protection de reapparition : aucun degat (le vide est traite plus haut,
+        // et /kill passe), pour ne pas mourir des l'apparition.
+        if (arena.hasSpawnProtection(player)
+                && event.getCause() != EntityDamageEvent.DamageCause.SUICIDE) {
+            event.setCancelled(true);
         }
     }
 
@@ -115,6 +123,8 @@ public class DamageListeners implements Listener {
         Arena arena = main.getArenaManager().getArenaOf(attacker);
         if (arena != null && arena.isParticipant(attacker) && arena.isParticipant(victim)) {
             arena.recordHit(attacker, victim, event.getFinalDamage());
+            // Frapper met fin a sa propre protection : pas de tir gratuit.
+            arena.clearSpawnProtection(attacker);
         }
     }
 

@@ -85,6 +85,11 @@ mark-cooldown: 3
 # des joueurs au lobby.
 end-delay: 10
 
+# Protection de reapparition : secondes pendant lesquelles un joueur qui vient
+# d'apparaitre (lancement, retour apres une mort) ne subit aucun degat. Elle
+# s'arrete des qu'il frappe quelqu'un. 0 = desactivee.
+respawn-protection: 3
+
 # Reconnexion en cours de partie. Un joueur qui se deconnecte (crash, coupure)
 # garde sa place dans son equipe et la retrouve automatiquement en se
 # reconnectant, avec son inventaire et son XP.
@@ -105,10 +110,13 @@ reconnection:
 # activer pour les arenes d'evenement.
 #   enabled       : false = aucun spectateur nulle part
 #   max-per-arena : nombre maximal de spectateurs par arene
+#   stay-in-area  : true = un spectateur ne peut pas sortir de la zone de jeu de
+#                   l'arene (autour des bases, piscines et generateurs)
 # Permission : thetowers.spectate (donnee a tous par defaut).
 spectator:
   enabled: true
   max-per-arena: 5
+  stay-in-area: true
 
 # Chat des parties. Pendant une partie, un message normal n'est lu que par
 # l'equipe de l'auteur ; un message qui commence par all-prefix est lu par tout

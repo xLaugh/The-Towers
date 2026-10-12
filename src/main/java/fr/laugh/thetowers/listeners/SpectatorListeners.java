@@ -1,5 +1,10 @@
 package fr.laugh.thetowers.listeners;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,6 +16,8 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,6 +26,7 @@ import fr.laugh.thetowers.Main;
 import fr.laugh.thetowers.compat.TTMaterial;
 import fr.laugh.thetowers.game.SpectatorHolder;
 import fr.laugh.thetowers.lang.Messages;
+import fr.laugh.thetowers.region.Cuboid;
 
 /**
  * Tout ce qu'un spectateur ne doit pas pouvoir faire (toucher aux blocs, aux
@@ -32,7 +40,11 @@ import fr.laugh.thetowers.lang.Messages;
  */
 public class SpectatorListeners implements Listener {
 
+    /** Delai entre deux rappels "tu ne peux pas t'eloigner", en ms. */
+    private static final long WARN_INTERVAL_MS = 3000L;
+
     private final Main main;
+    private final Map<UUID, Long> lastWarning = new HashMap<UUID, Long>();
 
     public SpectatorListeners(Main main) {
         this.main = main;
@@ -68,6 +80,54 @@ public class SpectatorListeners implements Listener {
             arena.leave(player, true);
             player.sendMessage(Main.PREFIX + Messages.tr("command.left_arena", "arena", arena.getName()));
         }
+    }
+
+    /**
+     * Un spectateur reste dans la zone de jeu de l'arene (voir
+     * {@code Arena#getArea}) : il est repousse a la limite. S'il se retrouve
+     * deja dehors (teleporte par un autre plugin...), on le ramene au point
+     * d'arrivee des spectateurs.
+     */
+    @EventHandler(ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent event) {
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (to == null || (from.getBlockX() == to.getBlockX()
+                && from.getBlockY() == to.getBlockY()
+                && from.getBlockZ() == to.getBlockZ())) {
+            return;
+        }
+        if (!main.isSpectatorBounded()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        Arena arena = spectatorArena(player);
+        if (arena == null) {
+            return;
+        }
+        Cuboid area = arena.getArea();
+        if (area == null || area.contains(to)) {
+            return;
+        }
+        if (area.contains(from)) {
+            event.setCancelled(true);
+        } else {
+            Location spot = arena.spectatorSpot();
+            if (spot != null && spot.getWorld() != null) {
+                player.teleport(spot);
+            }
+        }
+        long now = System.currentTimeMillis();
+        Long last = lastWarning.get(player.getUniqueId());
+        if (last == null || now - last.longValue() >= WARN_INTERVAL_MS) {
+            lastWarning.put(player.getUniqueId(), Long.valueOf(now));
+            player.sendMessage(Main.PREFIX + Messages.tr("spectator.out_of_bounds"));
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastWarning.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

@@ -460,6 +460,16 @@ public class Main extends JavaPlugin {
         return Math.max(1, getConfig().getInt("end-delay", 10));
     }
 
+    /** Secondes d'invulnerabilite apres une apparition ; 0 = aucune. */
+    public int getRespawnProtection() {
+        return Math.max(0, Math.min(30, getConfig().getInt("respawn-protection", 3)));
+    }
+
+    /** Vrai si un spectateur doit rester dans la zone de jeu. */
+    public boolean isSpectatorBounded() {
+        return getConfig().getBoolean("spectator.stay-in-area", true);
+    }
+
     /** Interrupteur general des spectateurs (en plus du reglage de chaque arene). */
     public boolean isSpectatorEnabled() {
         return getConfig().getBoolean("spectator.enabled", true);
